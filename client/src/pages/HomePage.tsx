@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Sparkles, SlidersHorizontal, Moon, Sun } from "lucide-react";
+import { Search, Sparkles, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DealCard from "@/components/DealCard";
 import DealDetailModal from "@/components/DealDetailModal";
 import BottomNav from "@/components/BottomNav";
+import ThemeToggle from "@/components/ThemeToggle";
 import type { Coupon, SavedCoupon } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -74,9 +75,7 @@ export default function HomePage() {
               className="pl-10 h-9 rounded-lg bg-muted/50"
             />
           </div>
-          <Button size="icon" variant="ghost" className="rounded-full">
-            <Moon className="w-5 h-5" />
-          </Button>
+          <ThemeToggle />
         </div>
       </header>
 
