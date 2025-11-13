@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Search, Sparkles, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 const categories = ["Groceries", "Fashion", "Electronics", "Dining", "Travel", "Health"];
 
 export default function HomePage() {
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Coupon | null>(null);
@@ -96,7 +98,13 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold uppercase tracking-wide">Categories</h3>
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2"
+              onClick={() => setLocation("/browse")}
+              data-testid="button-filters"
+            >
               <SlidersHorizontal className="w-4 h-4" />
               Filters
             </Button>
