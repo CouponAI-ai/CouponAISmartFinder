@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Calendar, TrendingUp, Sparkles, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -31,6 +32,7 @@ export default function DealCard({
   title,
   category,
   expirationDate,
+  claimCount = 0,
   isTrending = false,
   isSaved = false,
   isAIPick = false,
@@ -58,8 +60,7 @@ export default function DealCard({
   return (
     <Card
       data-testid={`card-deal-${id}`}
-      className="p-4 hover-elevate transition-all duration-200 cursor-pointer"
-      onClick={onViewDeal}
+      className="p-4 hover-elevate transition-all duration-200"
     >
       {/* Top row: Store info + Badges + Save button */}
       <div className="flex items-start justify-between gap-2 mb-4">
@@ -117,7 +118,7 @@ export default function DealCard({
       <div className="mb-3">
         <h3
           data-testid={`text-discount-${id}`}
-          className="text-4xl md:text-5xl font-extrabold text-primary font-display leading-none"
+          className="text-5xl font-extrabold text-primary font-display leading-none"
         >
           {discountAmount}
         </h3>
@@ -128,15 +129,13 @@ export default function DealCard({
         {title}
       </h4>
 
-      {/* Category badge */}
+      {/* Category - plain text, not badge */}
       <div className="mb-3">
-        <Badge variant="secondary" className="text-xs">
-          {category}
-        </Badge>
+        <p className="text-sm text-muted-foreground">{category}</p>
       </div>
 
       {/* Footer: Expiration + Distance */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
         {daysLeft && (
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
@@ -150,6 +149,23 @@ export default function DealCard({
           </div>
         )}
       </div>
+
+      {/* Claim count */}
+      {claimCount > 0 && (
+        <p className="text-xs text-muted-foreground mb-4" data-testid={`text-claims-${id}`}>
+          {claimCount.toLocaleString()} people claimed this
+        </p>
+      )}
+
+      {/* View Deal Button - Full width purple button */}
+      <Button
+        data-testid={`button-view-deal-${id}`}
+        onClick={onViewDeal}
+        className="w-full"
+        size="lg"
+      >
+        View Deal
+      </Button>
     </Card>
   );
 }
