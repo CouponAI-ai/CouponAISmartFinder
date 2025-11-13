@@ -2,9 +2,57 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
+import { calculateDistance } from "./geocoding";
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
+  
+  // Get nearby coupons based on location
+  app.get("/api/coupons/nearby", async (req, res) => {
+    try {
+      const { latitude, longitude, radius = "10" } = req.query;
+      
+      if (!latitude || !longitude) {
+        return res.status(400).json({ 
+          error: "latitude and longitude query parameters required" 
+        });
+      }
+
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
+      const maxRadius = parseFloat(radius as string);
+
+      if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadius)) {
+        return res.status(400).json({ 
+          error: "Invalid latitude, longitude, or radius values" 
+        });
+      }
+
+      const allCoupons = await storage.getCoupons();
+      
+      // Filter coupons by distance and add distance field
+      const nearbyCoupons = allCoupons
+        .filter((coupon) => 
+          coupon.latitude !== null && 
+          coupon.longitude !== null
+        )
+        .map((coupon) => {
+          const distance = calculateDistance(
+            { latitude: userLat, longitude: userLon },
+            { latitude: coupon.latitude!, longitude: coupon.longitude! }
+          );
+          return { ...coupon, distance };
+        })
+        .filter((coupon) => coupon.distance <= maxRadius)
+        .sort((a, b) => a.distance - b.distance);
+
+      res.json(nearbyCoupons);
+    } catch (error) {
+      console.error("Nearby coupons error:", error);
+      res.status(500).json({ error: "Failed to fetch nearby coupons" });
+    }
+  });
+
   // Get all coupons
   app.get("/api/coupons", async (_req, res) => {
     try {
