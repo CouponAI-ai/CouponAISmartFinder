@@ -67,8 +67,12 @@ export default function DealCard({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Store logo */}
           {storeLogoUrl && (
-            <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
-              <span className="text-xl">{storeLogoUrl}</span>
+            <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
+              <img 
+                src={storeLogoUrl} 
+                alt={storeName}
+                className="w-full h-full object-contain"
+              />
             </div>
           )}
           
