@@ -101,14 +101,14 @@ export default function HomePage() {
               Filters
             </Button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((category) => (
               <Button
                 key={category}
                 data-testid={`button-category-${category.toLowerCase()}`}
                 variant={selectedCategory === category ? "default" : "secondary"}
-                size="sm"
-                className="rounded-full whitespace-nowrap px-4"
+                size="lg"
+                className="rounded-full whitespace-nowrap px-6 text-base font-semibold"
                 onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
               >
                 {category}
