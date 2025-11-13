@@ -10,23 +10,12 @@ import { Copy, ExternalLink, Calendar, Check } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  deal: {
-    id: string;
-    storeName: string;
-    storeLogoUrl?: string;
-    discountAmount: string;
-    title: string;
-    description?: string;
-    code?: string;
-    category: string;
-    expirationDate?: Date | string | null;
-    claimCount?: number;
-    termsAndConditions?: string;
-  };
+  deal: Coupon;
 }
 
 export default function DealDetailModal({
