@@ -2,7 +2,20 @@
 
 ## Overview
 
-CouponAI is a mobile-first web application designed to help users discover, save, and organize coupons and deals from multiple stores. The platform features AI-powered personalized recommendations using OpenAI's API, location-based deal discovery, and a comprehensive browsing experience optimized for mobile devices. The application emphasizes quick deal scanning, thumb-friendly navigation, and clear discount visibility, drawing inspiration from modern shopping apps like Honey, Rakuten, and Groupon.
+CouponAI is a mobile-first web application designed to help users discover, save, and organize coupons and deals from multiple stores. The platform features AI-powered personalized recommendations using OpenAI's API, location-based deal discovery with geocoding, and a comprehensive browsing experience optimized for mobile devices. The application emphasizes quick deal scanning, thumb-friendly navigation, and clear discount visibility, drawing inspiration from modern shopping apps like Honey, Rakuten, and Groupon.
+
+## Project Status
+**Current State**: ✅ Fully functional MVP - Built from scratch on November 13, 2025
+
+### Recent Build (November 13, 2025)
+Complete rebuild of CouponAI application with all features:
+- ✅ All 5 pages implemented (Home, Browse, AI Picks, Saved, Profile)
+- ✅ Complete backend with Express API and in-memory storage
+- ✅ OpenAI integration for AI-powered recommendations
+- ✅ Geocoding backend with Haversine distance calculation
+- ✅ Location-based deals via `/api/coupons/nearby` endpoint
+- ✅ End-to-end testing completed successfully
+- ✅ All core functionality verified and working
 
 ## User Preferences
 
@@ -32,7 +45,7 @@ Preferred communication style: Simple, everyday language.
 - Mobile-first priority with single-column layouts on mobile, grid layouts on larger screens
 - Emphasis on scannable information with discount amounts as visual anchors
 - Minimum 44px tap targets for touch optimization
-- Custom typography hierarchy using Inter/DM Sans fonts with extrabold discount displays
+- Purple/blue gradient theme using Inter/DM Sans fonts with extrabold discount displays
 
 **State Management:**
 - React Query handles all server state with automatic caching and invalidation
@@ -47,27 +60,34 @@ Preferred communication style: Simple, everyday language.
 - Custom middleware for request logging and error handling
 
 **Data Storage Strategy:**
-- Currently uses in-memory storage (MemStorage class) suitable for MVP
+- In-memory storage (MemStorage class) suitable for MVP
 - Designed with interface abstraction (IStorage) to allow easy migration to PostgreSQL
 - Drizzle ORM configured for future database integration with schema already defined
+- Sample data includes 10 diverse coupons with location coordinates
 
 **API Endpoints:**
 - `/api/coupons` - Get all coupons
 - `/api/coupons/trending` - Get trending deals
-- `/api/coupons/nearby` - Location-based coupon discovery
+- `/api/coupons/nearby` - **NEW** Location-based coupon discovery with distance calculation
+  - Query params: `latitude`, `longitude`, `radius` (in miles, default 10)
+  - Returns coupons sorted by distance with distance field included
 - `/api/coupons/ai-picks` - AI-powered personalized recommendations
+- `/api/coupons/category/:category` - Get deals by category
+- `/api/coupons/search?q=query` - Search deals
+- `/api/coupons/:id` - Get specific coupon
+- `/api/coupons/:id/claim` - Claim a coupon (increments claim count)
 - `/api/saved-coupons` - CRUD operations for saved deals
 - `/api/user-preferences` - User category preferences management
 
 **Business Logic:**
-- Haversine formula implementation for accurate distance calculations
+- Haversine formula implementation for accurate distance calculations (in miles)
 - Category-based filtering and search functionality
 - Claim count tracking for popularity metrics
 
 ### Data Models
 
 **Core Entities:**
-- **Coupons**: Store name, logo, discount amount/percentage, title, description, code, category, expiration date, claim count, trending status, terms, and geographic coordinates
+- **Coupons**: Store name, logo, discount amount/percentage, title, description, code, category, expiration date, claim count, trending status, terms, and **geographic coordinates (latitude, longitude)**
 - **Saved Coupons**: User's bookmarked deals with timestamps
 - **User Preferences**: Category selections for personalized recommendations
 
@@ -75,6 +95,23 @@ Preferred communication style: Simple, everyday language.
 - Drizzle ORM schema defined in `shared/schema.ts`
 - PostgreSQL dialect configured with Neon serverless support
 - Zod validation schemas for runtime type checking
+
+### Geocoding & Location Features
+
+**Implementation:**
+- Haversine distance formula in `server/geocoding.ts`
+- Calculates accurate distances between coordinates in miles
+- All sample coupons include San Francisco Bay Area coordinates
+
+**Nearby Deals API:**
+- Filters coupons within specified radius
+- Returns results sorted by distance (nearest first)
+- Includes distance field in response for each coupon
+
+**Future Enhancements:**
+- UI components to display distance on deal cards
+- Map view toggle for visualizing deals geographically
+- Browser geolocation API integration
 
 ### AI Integration
 
@@ -152,11 +189,58 @@ Preferred communication style: Simple, everyday language.
 ### Font Dependencies
 
 **Google Fonts:**
-- DM Sans - Primary typeface for body text
-- Architects Daughter, Fira Code, Geist Mono - Accent fonts (loaded but may not be actively used)
+- Inter - Primary body font
+- DM Sans - Display font for headings
+- Outfit - Accent font for discount numbers
+- (Plus other loaded fonts: Architects Daughter, Fira Code, Geist Mono, etc.)
 
 ### Browser APIs Used
 
-- Geolocation API for location-based deal discovery
+- Geolocation API for location-based deal discovery (ready for frontend integration)
 - Clipboard API for coupon code copying
 - Local Storage (implicit via React Query persistence)
+
+## Testing
+
+**End-to-End Testing Completed:**
+- ✅ Homepage trending deals display and search
+- ✅ Browse page filtering, sorting, and search
+- ✅ AI Picks personalized recommendations
+- ✅ Saved deals functionality (save/unsave)
+- ✅ Profile preferences management
+- ✅ **Nearby deals API with geocoding** (latitude, longitude, radius)
+- ✅ Bottom navigation across all pages
+- ✅ Deal detail modals
+- ✅ All interactive elements and data-testid attributes
+
+**Test Results:**
+- All core functionality verified and working
+- API endpoints responding correctly
+- UI interactions behaving as expected
+- Minor accessibility improvements recommended (non-critical)
+
+## Deployment Status
+
+**Ready for Deployment:**
+The application is fully functional and ready to be published on Replit.
+
+**Environment Variables Needed:**
+- `OPENAI_API_KEY` (optional) - For AI recommendations. Falls back to category-based filtering if not provided.
+- `SESSION_SECRET` (already configured) - For session management
+
+**Next Steps:**
+1. Click "Publish" in Replit to deploy the application
+2. Add OPENAI_API_KEY environment variable if you want AI-powered recommendations
+3. The app will be available at your .replit.app domain
+
+## Future Enhancements
+
+**Planned Features:**
+- Migrate from in-memory storage to PostgreSQL for persistent data across sessions
+- Add UI components for location features (distance badges on cards, map view toggle)
+- Implement push notifications for expiring deals near user location
+- Add user authentication system for personalized saved deals and preferences across devices
+- Create deal analytics dashboard to track claim rates and user engagement
+- Enable actual geolocation in browser for automatic location detection
+- Add deal submission form for users to contribute coupons
+- Implement deal sharing functionality (social media, email)
