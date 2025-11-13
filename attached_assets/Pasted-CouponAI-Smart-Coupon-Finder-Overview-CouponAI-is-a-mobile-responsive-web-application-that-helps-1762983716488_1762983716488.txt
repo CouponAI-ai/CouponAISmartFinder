@@ -1,0 +1,111 @@
+CouponAI - Smart Coupon Finder
+Overview
+CouponAI is a mobile-responsive web application that helps users find, compare, and organize coupons and discounts from multiple stores. The app features AI-powered personalized deal recommendations based on user preferences.
+Project Status
+Current State: Fully functional MVP with connected frontend and backend
+Recent Changes (November 3, 2025)
+●	Implemented backend infrastructure with API routes and in-memory storage
+●	Integrated OpenAI API for AI-powered personalized recommendations
+●	Connected frontend to backend APIs for real-time data fetching
+●	Fixed date serialization issues between frontend and backend
+●	Implemented save/unsave coupon functionality with persistent storage
+●	Added search and filtering capabilities
+●	Created user preferences system for personalized category recommendations
+Tech Stack
+●	Frontend: React + TypeScript + Vite
+●	UI Framework: Tailwind CSS + Shadcn UI components
+●	Routing: Wouter
+●	State Management: TanStack Query (React Query)
+●	Backend: Express.js + TypeScript
+●	Data Storage: In-memory storage (MemStorage) - suitable for MVP
+●	AI Integration: OpenAI API for personalized recommendations
+●	Forms: React Hook Form with Zod validation
+Project Architecture
+Frontend Structure
+client/src/
+├── pages/              # Page components
+│   ├── HomePage.tsx    # Main landing page with trending deals
+│   ├── BrowsePage.tsx  # Browse all deals with search/filter
+│   ├── AIPicksPage.tsx # AI-powered personalized recommendations
+│   ├── SavedPage.tsx   # User's saved coupons
+│   └── ProfilePage.tsx # User preferences and settings
+├── components/         # Reusable components
+│   ├── DealCard.tsx    # Deal/coupon card component
+│   ├── DealDetailModal.tsx  # Deal detail popup
+│   └── BottomNav.tsx   # Mobile bottom navigation
+└── lib/
+   └── api.ts          # API client with date handling
+Backend Structure
+server/
+├── routes.ts           # API route handlers
+├── storage.ts          # In-memory storage implementation
+└── ai.ts              # OpenAI integration for recommendations
+Shared Schema
+shared/
+└── schema.ts          # TypeScript types and Zod schemas
+Key Features
+1. AI-Powered Recommendations
+●	Personalized deal suggestions based on user preferences
+●	Category-based recommendations using OpenAI
+●	Smart filtering based on browsing history
+2. Coupon Management
+●	Browse all available coupons
+●	Search by store name or deal description
+●	Filter by category
+●	Save favorite deals for later
+●	View trending and expiring deals
+3. User Experience
+●	Mobile-first responsive design
+●	Bottom navigation for easy thumb access
+●	Card-based deal layouts
+●	Real-time save/unsave functionality
+●	Deal detail modal with full information
+4. API Endpoints
+●	GET /api/coupons - Get all coupons
+●	GET /api/coupons/trending - Get trending deals
+●	GET /api/coupons/ai-picks - Get AI-recommended deals
+●	GET /api/coupons/category/:category - Get deals by category
+●	GET /api/coupons/search?q=query - Search deals
+●	GET /api/coupons/:id - Get specific coupon
+●	POST /api/coupons/:id/claim - Claim a coupon
+●	GET /api/saved-coupons - Get saved coupons
+●	POST /api/saved-coupons - Save a coupon
+●	DELETE /api/saved-coupons/:id - Unsave a coupon
+●	GET /api/user-preferences - Get user preferences
+●	POST /api/user-preferences - Update user preferences
+Design System
+Located in design_guidelines.md:
+●	Color Palette: Purple/blue gradient theme
+●	Typography: Inter (body) + DM Sans (headings)
+●	Spacing: Consistent card padding and margins
+●	Mobile-first responsive layout
+●	Card-based UI with hover interactions
+Technical Notes
+Date Handling
+●	Dates are stored as Date objects in storage
+●	API returns dates as ISO strings (JSON serialization)
+●	Frontend api.ts converts date strings back to Date objects
+●	Components handle both Date and string formats for robustness
+Type Compatibility
+●	Optional fields in schema allow both null and undefined
+●	DealCard and DealDetailModal accept both for maximum flexibility
+●	Storage uses proper TypeScript types from shared/schema.ts
+State Management
+●	React Query for server state and caching
+●	Query invalidation after mutations (save/unsave)
+●	Hierarchical query keys for efficient cache management
+Environment Variables
+●	OPENAI_API_KEY - Required for AI recommendations
+●	SESSION_SECRET - For session management
+Running the Project
+The application runs on port 5000 with:
+●	Backend: Express server
+●	Frontend: Vite dev server
+●	Command: npm run dev
+Future Enhancements
+●	Database migration (PostgreSQL) for production
+●	Push notifications for expiring deals
+●	Price comparison features
+●	User authentication
+●	Deal analytics and tracking
+●	Store location integration
