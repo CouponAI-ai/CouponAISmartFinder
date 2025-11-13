@@ -115,14 +115,14 @@ export default function BrowsePage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border z-40 px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-semibold mb-4">Browse Deals</h1>
+      <div className="sticky top-0 bg-background border-b border-border z-40 px-4 py-4">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-xl font-semibold mb-4">Browse Deals</h1>
           
           {/* Search and Filter */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 data-testid="input-search-browse"
                 type="search"
