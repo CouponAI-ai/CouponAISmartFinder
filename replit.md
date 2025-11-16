@@ -8,10 +8,15 @@ CouponAI is a mobile-first web application designed to help users discover, save
 **Current State**: ✅ Fully functional MVP with redesigned UI - November 13, 2025
 
 ### Zip Code Search with OpenStreetMap (November 16, 2025)
-Complete implementation of location-based deal discovery:
+Complete implementation of location-based deal discovery with boundary visualization:
 - ✅ New Map page with zip code search input
 - ✅ Nominatim API geocoding (OpenStreetMap) - converts zip code to coordinates
 - ✅ React Leaflet integration - interactive map with store markers
+- ✅ **Town Boundary Visualization** - rectangular overlay showing search area
+  - Semi-transparent purple fill (10% opacity) with 2px purple border (60% opacity)
+  - Uses Nominatim bounding box data (always available for zip codes)
+  - Map auto-fits to display entire boundary area
+  - Boundary visible even when 0 deals found (provides visual context)
 - ✅ Nearby deals API - finds stores within 25-mile radius
 - ✅ Visual map markers with popups showing deal details
 - ✅ Deals list sorted by distance
@@ -135,10 +140,15 @@ Preferred communication style: Simple, everyday language.
 - Returns results sorted by distance (nearest first)
 - Includes distance field in response for each coupon
 
-**Zip Code Search with OpenStreetMap (NEW - November 16, 2025):**
+**Zip Code Search with OpenStreetMap (November 16, 2025):**
 - ✅ Interactive map page at `/map`
 - ✅ Zip code input with geocoding via Nominatim API
 - ✅ OpenStreetMap integration using React Leaflet
+- ✅ **Town Boundary Visualization** - rectangular overlay showing search area
+  - React Leaflet Rectangle component uses bounding box from Nominatim
+  - Semi-transparent purple fill (10% opacity) with 2px purple border (60% opacity)
+  - MapBoundsUpdater auto-fits map to show entire boundary
+  - Boundary displays even when 0 deals found (provides visual context)
 - ✅ Visual markers for each store location on map
 - ✅ Click markers to see deal popups
 - ✅ Side-by-side layout: map + deals list
@@ -149,12 +159,14 @@ Preferred communication style: Simple, everyday language.
 - ✅ Click deal cards or markers to view full details
 - ✅ Responsive design (grid layout on desktop)
 - ✅ Bottom navigation includes Map tab
+- ✅ Comprehensive e2e testing (verified with SF, Beverly Hills, NYC zip codes)
 
 **Future Enhancements:**
 - Browser geolocation API integration (auto-detect location)
 - Persist search state across navigation
 - Adjustable search radius selector
 - Filter deals on map by category
+- Higher-fidelity boundary polygons (if available from alternative geocoding services)
 
 ### AI Integration
 
