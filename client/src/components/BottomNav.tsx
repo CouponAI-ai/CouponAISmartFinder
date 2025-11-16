@@ -1,4 +1,4 @@
-import { Home, Search, Sparkles, Bookmark, User } from "lucide-react";
+import { Home, Search, Sparkles, Bookmark, MapIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function BottomNav() {
@@ -9,7 +9,7 @@ export default function BottomNav() {
     { path: "/browse", icon: Search, label: "Browse" },
     { path: "/ai-picks", icon: Sparkles, label: "AI Picks" },
     { path: "/saved", icon: Bookmark, label: "Saved" },
-    { path: "/profile", icon: User, label: "Profile" },
+    { path: "/map", icon: MapIcon, label: "Map" },
   ];
 
   return (
@@ -20,25 +20,25 @@ export default function BottomNav() {
           const isActive = location === item.path;
           
           return (
-            <Link key={item.path} href={item.path}>
-              <button
-                data-testid={`button-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                className="flex flex-col items-center justify-center gap-1 px-3 py-2 hover-elevate active-elevate-2 rounded-md transition-colors min-w-[60px]"
+            <Link
+              key={item.path}
+              href={item.path}
+              data-testid={`button-nav-${item.label.toLowerCase().replace(' ', '-')}`}
+              className="flex flex-col items-center justify-center gap-1 px-3 py-2 hover-elevate active-elevate-2 rounded-md transition-colors min-w-[60px]"
+            >
+              <Icon
+                className={`w-6 h-6 ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              <span
+                className={`text-xs ${
+                  isActive ? "text-primary font-semibold" : "text-muted-foreground"
+                }`}
               >
-                <Icon
-                  className={`w-6 h-6 ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                />
-                <span
-                  className={`text-xs ${
-                    isActive ? "text-primary font-semibold" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
+                {item.label}
+              </span>
             </Link>
           );
         })}

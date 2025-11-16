@@ -30,3 +30,54 @@ export function calculateDistance(
 function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
+
+// Geocode zip code to coordinates using Nominatim API
+export interface GeocodedLocation {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
+
+export async function geocodeZipCode(
+  zipCode: string,
+  countryCode = "us"
+): Promise<GeocodedLocation | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&countrycodes=${countryCode}&format=json&addressdetails=1&limit=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "CouponAI/1.0 (Replit Education Project)",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Nominatim API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      console.log(`No results found for zip code: ${zipCode}`);
+      return null;
+    }
+
+    const result = data[0];
+    
+    return {
+      latitude: parseFloat(result.lat),
+      longitude: parseFloat(result.lon),
+      displayName: result.display_name,
+      city: result.address?.city || result.address?.town || result.address?.village,
+      state: result.address?.state,
+      country: result.address?.country,
+    };
+  } catch (error) {
+    console.error("Geocoding error:", error);
+    return null;
+  }
+}

@@ -2,11 +2,33 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
-import { calculateDistance } from "./geocoding";
+import { calculateDistance, geocodeZipCode } from "./geocoding";
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
   
+  // Geocode zip code to coordinates
+  app.get("/api/geocode/zipcode", async (req, res) => {
+    try {
+      const { zipcode, country = "us" } = req.query;
+      
+      if (!zipcode) {
+        return res.status(400).json({ error: "zipcode query parameter required" });
+      }
+
+      const result = await geocodeZipCode(zipcode as string, country as string);
+      
+      if (!result) {
+        return res.status(404).json({ error: "Zip code not found" });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      res.status(500).json({ error: "Failed to geocode zip code" });
+    }
+  });
+
   // Get nearby coupons based on location
   app.get("/api/coupons/nearby", async (req, res) => {
     try {

@@ -7,6 +7,19 @@ CouponAI is a mobile-first web application designed to help users discover, save
 ## Project Status
 **Current State**: ✅ Fully functional MVP with redesigned UI - November 13, 2025
 
+### Zip Code Search with OpenStreetMap (November 16, 2025)
+Complete implementation of location-based deal discovery:
+- ✅ New Map page with zip code search input
+- ✅ Nominatim API geocoding (OpenStreetMap) - converts zip code to coordinates
+- ✅ React Leaflet integration - interactive map with store markers
+- ✅ Nearby deals API - finds stores within 25-mile radius
+- ✅ Visual map markers with popups showing deal details
+- ✅ Deals list sorted by distance
+- ✅ Toast notifications and error handling
+- ✅ Bottom navigation updated with Map tab
+- ✅ All React Query patterns followed correctly
+- ✅ Comprehensive e2e testing completed
+
 ### Latest UI Redesign (November 13, 2025)
 Complete UI overhaul to match original design screenshots:
 - ✅ DealCard completely redesigned: store info on top row, HUGE purple discount (text-5xl), category as plain text, claim count ("X people claimed this"), full-width "View Deal" button
@@ -45,9 +58,10 @@ Preferred communication style: Simple, everyday language.
 - Mobile-first responsive design with card-based layouts
 
 **Component Structure:**
-- Page-based architecture with five main routes: Home, Browse, AI Picks, Saved, and Profile
-- Reusable components including DealCard, DealDetailModal, and BottomNav
+- Page-based architecture with six main routes: Home, Browse, AI Picks, Saved, Map, and Profile
+- Reusable components including DealCard, DealDetailModal, MapView, and BottomNav
 - Fixed bottom navigation bar for mobile-optimized thumb reach
+- MapView component with React Leaflet for interactive maps
 
 **Design Philosophy:**
 - Mobile-first priority with single-column layouts on mobile, grid layouts on larger screens
@@ -76,9 +90,13 @@ Preferred communication style: Simple, everyday language.
 **API Endpoints:**
 - `/api/coupons` - Get all coupons
 - `/api/coupons/trending` - Get trending deals
-- `/api/coupons/nearby` - **NEW** Location-based coupon discovery with distance calculation
+- `/api/coupons/nearby` - Location-based coupon discovery with distance calculation
   - Query params: `latitude`, `longitude`, `radius` (in miles, default 10)
   - Returns coupons sorted by distance with distance field included
+- `/api/geocode/zipcode` - **NEW** Convert zip code to coordinates
+  - Query params: `zipcode`, `country` (default "us")
+  - Returns: latitude, longitude, city, state, country, displayName
+  - Uses Nominatim (OpenStreetMap) geocoding API
 - `/api/coupons/ai-picks` - AI-powered personalized recommendations
 - `/api/coupons/category/:category` - Get deals by category
 - `/api/coupons/search?q=query` - Search deals
@@ -110,16 +128,33 @@ Preferred communication style: Simple, everyday language.
 - Haversine distance formula in `server/geocoding.ts`
 - Calculates accurate distances between coordinates in miles
 - All sample coupons include San Francisco Bay Area coordinates
+- **NEW**: Nominatim API integration for zip code geocoding
 
 **Nearby Deals API:**
 - Filters coupons within specified radius
 - Returns results sorted by distance (nearest first)
 - Includes distance field in response for each coupon
 
+**Zip Code Search with OpenStreetMap (NEW - November 16, 2025):**
+- ✅ Interactive map page at `/map`
+- ✅ Zip code input with geocoding via Nominatim API
+- ✅ OpenStreetMap integration using React Leaflet
+- ✅ Visual markers for each store location on map
+- ✅ Click markers to see deal popups
+- ✅ Side-by-side layout: map + deals list
+- ✅ Deals sorted by distance (nearest first)
+- ✅ 25-mile search radius (configurable)
+- ✅ Proper error handling for invalid zip codes
+- ✅ Toast notifications for search results
+- ✅ Click deal cards or markers to view full details
+- ✅ Responsive design (grid layout on desktop)
+- ✅ Bottom navigation includes Map tab
+
 **Future Enhancements:**
-- UI components to display distance on deal cards
-- Map view toggle for visualizing deals geographically
-- Browser geolocation API integration
+- Browser geolocation API integration (auto-detect location)
+- Persist search state across navigation
+- Adjustable search radius selector
+- Filter deals on map by category
 
 ### AI Integration
 
