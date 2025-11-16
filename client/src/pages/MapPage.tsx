@@ -18,6 +18,7 @@ interface GeocodedLocation {
   city?: string;
   state?: string;
   country?: string;
+  boundingBox?: [number, number, number, number];
 }
 
 export default function MapPage() {
@@ -143,14 +144,6 @@ export default function MapPage() {
               Enter your ZIP code above to find nearby stores and restaurants with exclusive deals
             </p>
           </Card>
-        ) : nearbyDeals.length === 0 ? (
-          <Card className="p-12 text-center">
-            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-semibold mb-2">No Deals Found</h2>
-            <p className="text-muted-foreground">
-              We couldn't find any deals near {location.city || searchedZip}. Try a different ZIP code or check back later!
-            </p>
-          </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Map */}
@@ -160,6 +153,7 @@ export default function MapPage() {
                 zoom={12}
                 deals={nearbyDeals}
                 onViewDeal={setSelectedDeal}
+                boundingBox={location.boundingBox}
               />
             </div>
 
@@ -168,36 +162,46 @@ export default function MapPage() {
               <h3 className="text-lg font-semibold sticky top-0 bg-background py-2">
                 {nearbyDeals.length} {nearbyDeals.length === 1 ? "Deal" : "Deals"} Found
               </h3>
-              {nearbyDeals.map((deal) => (
-                <Card
-                  key={deal.id}
-                  className="p-4 cursor-pointer hover-elevate"
-                  onClick={() => setSelectedDeal(deal)}
-                  data-testid={`card-map-deal-${deal.id}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {deal.storeLogoUrl && (
-                          <img
-                            src={deal.storeLogoUrl}
-                            alt={deal.storeName}
-                            className="w-6 h-6 object-contain rounded"
-                          />
-                        )}
-                        <p className="font-semibold text-sm">{deal.storeName}</p>
-                      </div>
-                      <h4 className="text-2xl font-bold text-primary mb-1">
-                        {deal.discountAmount}
-                      </h4>
-                      <p className="text-sm mb-2">{deal.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {deal.distance.toFixed(1)} miles away • {deal.category}
-                      </p>
-                    </div>
-                  </div>
+              {nearbyDeals.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                  <h4 className="font-semibold mb-2">No Deals Found</h4>
+                  <p className="text-sm text-muted-foreground">
+                    We couldn't find any deals in this area. Try a different ZIP code or check back later!
+                  </p>
                 </Card>
-              ))}
+              ) : (
+                nearbyDeals.map((deal) => (
+                  <Card
+                    key={deal.id}
+                    className="p-4 cursor-pointer hover-elevate"
+                    onClick={() => setSelectedDeal(deal)}
+                    data-testid={`card-map-deal-${deal.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {deal.storeLogoUrl && (
+                            <img
+                              src={deal.storeLogoUrl}
+                              alt={deal.storeName}
+                              className="w-6 h-6 object-contain rounded"
+                            />
+                          )}
+                          <p className="font-semibold text-sm">{deal.storeName}</p>
+                        </div>
+                        <h4 className="text-2xl font-bold text-primary mb-1">
+                          {deal.discountAmount}
+                        </h4>
+                        <p className="text-sm mb-2">{deal.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {deal.distance.toFixed(1)} miles away • {deal.category}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -1,5 +1,6 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { Icon } from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap } from "react-leaflet";
+import { Icon, LatLngBounds } from "leaflet";
+import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
 import type { Coupon } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,21 @@ interface MapViewProps {
   zoom?: number;
   deals: (Coupon & { distance?: number })[];
   onViewDeal?: (deal: Coupon) => void;
+  boundingBox?: [number, number, number, number];
+}
+
+function MapBoundsUpdater({ boundingBox }: { boundingBox?: [number, number, number, number] }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (boundingBox) {
+      const [south, north, west, east] = boundingBox;
+      const bounds = new LatLngBounds([south, west], [north, east]);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [boundingBox, map]);
+  
+  return null;
 }
 
 const storeIcon = new Icon({
@@ -23,7 +39,7 @@ const storeIcon = new Icon({
   shadowSize: [41, 41],
 });
 
-export default function MapView({ center, zoom = 12, deals, onViewDeal }: MapViewProps) {
+export default function MapView({ center, zoom = 12, deals, onViewDeal, boundingBox }: MapViewProps) {
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border">
       <MapContainer
@@ -36,6 +52,24 @@ export default function MapView({ center, zoom = 12, deals, onViewDeal }: MapVie
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        
+        <MapBoundsUpdater boundingBox={boundingBox} />
+        
+        {boundingBox && (
+          <Rectangle
+            bounds={[
+              [boundingBox[0], boundingBox[2]], // southwest
+              [boundingBox[1], boundingBox[3]], // northeast
+            ]}
+            pathOptions={{
+              fillColor: "hsl(var(--primary))",
+              fillOpacity: 0.1,
+              color: "hsl(var(--primary))",
+              weight: 2,
+              opacity: 0.6,
+            }}
+          />
+        )}
         
         {deals.map((deal) => {
           if (!deal.latitude || !deal.longitude) return null;

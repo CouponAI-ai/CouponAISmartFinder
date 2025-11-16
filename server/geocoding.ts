@@ -39,6 +39,7 @@ export interface GeocodedLocation {
   city?: string;
   state?: string;
   country?: string;
+  boundingBox?: [number, number, number, number]; // [south, north, west, east]
 }
 
 export async function geocodeZipCode(
@@ -75,6 +76,7 @@ export async function geocodeZipCode(
       city: result.address?.city || result.address?.town || result.address?.village,
       state: result.address?.state,
       country: result.address?.country,
+      boundingBox: result.boundingbox ? result.boundingbox.map((v: string) => parseFloat(v)) : undefined,
     };
   } catch (error) {
     console.error("Geocoding error:", error);
