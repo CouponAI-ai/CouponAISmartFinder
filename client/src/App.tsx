@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PasswordGate } from "@/components/PasswordGate";
 
 import HomePage from "@/pages/HomePage";
 import BrowsePage from "@/pages/BrowsePage";
@@ -32,7 +33,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <Router />
+          <PasswordGate>
+            <Router />
+          </PasswordGate>
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>

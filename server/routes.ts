@@ -8,6 +8,27 @@ import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness
 export function registerRoutes(app: Express) {
   const server = createServer(app);
   
+  // Password verification endpoint
+  app.post("/api/auth/verify", async (req, res) => {
+    try {
+      const { password } = req.body;
+      const correctPassword = process.env.APP_PASSWORD;
+
+      if (!correctPassword) {
+        return res.status(500).json({ error: "App password not configured" });
+      }
+
+      if (password === correctPassword) {
+        return res.json({ success: true });
+      } else {
+        return res.status(401).json({ error: "Incorrect password" });
+      }
+    } catch (error) {
+      console.error("Auth verification error:", error);
+      res.status(500).json({ error: "Failed to verify password" });
+    }
+  });
+  
   // Geocode zip code to coordinates
   app.get("/api/geocode/zipcode", async (req, res) => {
     try {
