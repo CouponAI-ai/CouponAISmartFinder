@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
 import { calculateDistance, geocodeZipCode } from "./geocoding";
+import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
@@ -32,7 +33,7 @@ export function registerRoutes(app: Express) {
   // Get nearby coupons based on location
   app.get("/api/coupons/nearby", async (req, res) => {
     try {
-      const { latitude, longitude, radius = "10" } = req.query;
+      const { latitude, longitude, radius = "25" } = req.query;
       
       if (!latitude || !longitude) {
         return res.status(400).json({ 
@@ -42,33 +43,29 @@ export function registerRoutes(app: Express) {
 
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
-      const maxRadius = parseFloat(radius as string);
+      const maxRadiusMiles = parseFloat(radius as string);
 
-      if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadius)) {
+      if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
         return res.status(400).json({ 
           error: "Invalid latitude, longitude, or radius values" 
         });
       }
 
-      const allCoupons = await storage.getCoupons();
-      
-      // Filter coupons by distance and add distance field
-      const nearbyCoupons = allCoupons
-        .filter((coupon) => 
-          coupon.latitude !== null && 
-          coupon.longitude !== null
-        )
-        .map((coupon) => {
-          const distance = calculateDistance(
-            { latitude: userLat, longitude: userLon },
-            { latitude: coupon.latitude!, longitude: coupon.longitude! }
-          );
-          return { ...coupon, distance };
-        })
-        .filter((coupon) => coupon.distance <= maxRadius)
-        .sort((a, b) => a.distance - b.distance);
+      // Convert miles to meters for Overpass API (1 mile ≈ 1609 meters)
+      const maxRadiusMeters = maxRadiusMiles * 1609;
 
-      res.json(nearbyCoupons);
+      // Fetch real businesses from OpenStreetMap
+      const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
+      
+      // Generate sample coupon deals for each real business
+      const couponsWithDeals = businesses.map((business) => 
+        generateSampleDeal(business, userLat, userLon)
+      );
+
+      // Sort by distance (nearest first)
+      const sortedCoupons = couponsWithDeals.sort((a, b) => a.distance - b.distance);
+
+      res.json(sortedCoupons);
     } catch (error) {
       console.error("Nearby coupons error:", error);
       res.status(500).json({ error: "Failed to fetch nearby coupons" });
@@ -221,3 +218,102 @@ export function registerRoutes(app: Express) {
 
   return server;
 }
+
+// Helper function to generate sample coupon deals for real businesses
+function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon: number) {
+  const distance = calculateDistance(
+    { latitude: userLat, longitude: userLon },
+    { latitude: business.latitude, longitude: business.longitude }
+  );
+
+  // Generate varied discount types
+  const discountTypes = [
+    { amount: "$5 OFF", title: "Save $5 on your purchase", code: "SAVE5" },
+    { amount: "$10 OFF", title: "Save $10 on orders over $30", code: "SAVE10" },
+    { amount: "$15 OFF", title: "Save $15 on orders over $50", code: "SAVE15" },
+    { amount: "$20 OFF", title: "Save $20 on orders over $75", code: "SAVE20" },
+    { amount: "10% OFF", title: "10% off your entire order", code: "OFF10" },
+    { amount: "15% OFF", title: "15% off your entire order", code: "OFF15" },
+    { amount: "20% OFF", title: "20% off your entire order", code: "OFF20" },
+    { amount: "25% OFF", title: "25% off your entire order", code: "OFF25" },
+    { amount: "BOGO", title: "Buy one, get one free", code: "BOGO" },
+    { amount: "FREE ITEM", title: "Free appetizer with entree", code: "FREEAPP" },
+  ];
+
+  // Select a random discount
+  const discount = discountTypes[Math.floor(Math.random() * discountTypes.length)];
+
+  // Generate expiration date (30-90 days from now)
+  const daysUntilExpiry = 30 + Math.floor(Math.random() * 60);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + daysUntilExpiry);
+
+  // Generate claim count (0-500)
+  const claimCount = Math.floor(Math.random() * 500);
+
+  // Determine category based on business type
+  const category = mapBusinessTypeToCategory(business.type);
+
+  // Generate store logo URL (placeholder - could be enhanced with real logos)
+  const logoUrl = generateLogoUrl(business.name, category);
+
+  return {
+    id: `osm-${business.id}`,
+    storeName: business.name,
+    storeLogoUrl: logoUrl,
+    discountAmount: discount.amount,
+    title: discount.title,
+    description: `Exclusive deal at ${business.name}`,
+    code: discount.code,
+    category,
+    expiresAt: expiresAt.toISOString(),
+    claimCount,
+    trending: claimCount > 250,
+    terms: "Valid for in-store purchases only. Cannot be combined with other offers.",
+    latitude: business.latitude,
+    longitude: business.longitude,
+    distance,
+  };
+}
+
+// Generate logo URL for stores
+function generateLogoUrl(storeName: string, category: string): string {
+  // Map common store names to known logos
+  const logoMap: Record<string, string> = {
+    "walmart": "https://logo.clearbit.com/walmart.com",
+    "target": "https://logo.clearbit.com/target.com",
+    "kroger": "https://logo.clearbit.com/kroger.com",
+    "safeway": "https://logo.clearbit.com/safeway.com",
+    "walgreens": "https://logo.clearbit.com/walgreens.com",
+    "cvs": "https://logo.clearbit.com/cvs.com",
+    "mcdonald": "https://logo.clearbit.com/mcdonalds.com",
+    "subway": "https://logo.clearbit.com/subway.com",
+    "starbucks": "https://logo.clearbit.com/starbucks.com",
+    "wendy": "https://logo.clearbit.com/wendys.com",
+    "burger king": "https://logo.clearbit.com/bk.com",
+    "taco bell": "https://logo.clearbit.com/tacobell.com",
+    "pizza hut": "https://logo.clearbit.com/pizzahut.com",
+    "domino": "https://logo.clearbit.com/dominos.com",
+    "best buy": "https://logo.clearbit.com/bestbuy.com",
+  };
+
+  const lowerName = storeName.toLowerCase();
+  
+  for (const [key, url] of Object.entries(logoMap)) {
+    if (lowerName.includes(key)) {
+      return url;
+    }
+  }
+
+  // Default category-based icons
+  const categoryIcons: Record<string, string> = {
+    "Food & Dining": "https://api.dicebear.com/7.x/icons/svg?icon=restaurant",
+    "Grocery": "https://api.dicebear.com/7.x/icons/svg?icon=shopping-cart",
+    "Retail": "https://api.dicebear.com/7.x/icons/svg?icon=shopping-bag",
+    "Electronics": "https://api.dicebear.com/7.x/icons/svg?icon=cpu",
+    "Health": "https://api.dicebear.com/7.x/icons/svg?icon=heart",
+  };
+
+  return categoryIcons[category] || "https://api.dicebear.com/7.x/icons/svg?icon=store";
+}
+
