@@ -52,11 +52,17 @@ export function registerRoutes(app: Express) {
       }
 
       // Convert miles to meters for Overpass API (1 mile ≈ 1609 meters)
-      const maxRadiusMeters = maxRadiusMiles * 1609;
+      // Using 10 miles for faster Overpass queries
+      const searchRadiusMiles = Math.min(maxRadiusMiles, 10);
+      const maxRadiusMeters = searchRadiusMiles * 1609;
+
+      console.log(`Searching for businesses within ${searchRadiusMiles} miles of (${userLat}, ${userLon})`);
 
       // Fetch real businesses from OpenStreetMap
       const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
       
+      console.log(`Found ${businesses.length} businesses from Overpass API`);
+
       // Generate sample coupon deals for each real business
       const couponsWithDeals = businesses.map((business) => 
         generateSampleDeal(business, userLat, userLon)
@@ -65,6 +71,7 @@ export function registerRoutes(app: Express) {
       // Sort by distance (nearest first)
       const sortedCoupons = couponsWithDeals.sort((a, b) => a.distance - b.distance);
 
+      console.log(`Returning ${sortedCoupons.length} deals`);
       res.json(sortedCoupons);
     } catch (error) {
       console.error("Nearby coupons error:", error);

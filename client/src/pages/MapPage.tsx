@@ -57,6 +57,9 @@ export default function MapPage() {
       setLocation(data);
       setSearchedZip(zipCode);
       
+      // Invalidate nearby deals cache to force fresh fetch from Overpass API
+      await queryClient.invalidateQueries({ queryKey: ['/api/coupons/nearby'] });
+      
       toast({
         title: "Location found!",
         description: `Showing deals near ${data.city || data.displayName}`,

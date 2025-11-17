@@ -23,27 +23,27 @@ const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
 export async function fetchNearbyBusinesses(
   latitude: number,
   longitude: number,
-  radiusMeters: number = 40000 // ~25 miles
+  radiusMeters: number = 16000 // ~10 miles (reduced for faster queries)
 ): Promise<OverpassBusiness[]> {
   try {
-    // Build Overpass QL query to find various business types
-    // We'll search for: restaurants, cafes, fast_food, and various shop types
+    console.log(`Querying Overpass API for businesses within ${radiusMeters}m of (${latitude}, ${longitude})`);
+    
+    // Build Overpass QL query for main business types only
+    // Simplified to reduce query time
     const query = `
-      [out:json][timeout:25];
+      [out:json][timeout:15];
       (
         node["amenity"="restaurant"](around:${radiusMeters},${latitude},${longitude});
         node["amenity"="cafe"](around:${radiusMeters},${latitude},${longitude});
         node["amenity"="fast_food"](around:${radiusMeters},${latitude},${longitude});
         node["shop"="supermarket"](around:${radiusMeters},${latitude},${longitude});
         node["shop"="convenience"](around:${radiusMeters},${latitude},${longitude});
-        node["shop"="clothes"](around:${radiusMeters},${latitude},${longitude});
-        node["shop"="electronics"](around:${radiusMeters},${latitude},${longitude});
-        node["shop"="bakery"](around:${radiusMeters},${latitude},${longitude});
-        node["shop"="pharmacy"](around:${radiusMeters},${latitude},${longitude});
-        node["shop"="department_store"](around:${radiusMeters},${latitude},${longitude});
       );
-      out body;
+      out body 50;
     `;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
     const response = await fetch(OVERPASS_API_URL, {
       method: "POST",
@@ -51,7 +51,10 @@ export async function fetchNearbyBusinesses(
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `data=${encodeURIComponent(query)}`,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`Overpass API error: ${response.status}`);
