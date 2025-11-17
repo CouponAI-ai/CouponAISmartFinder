@@ -31,7 +31,7 @@ export default function MapPage() {
 
   const nearbyDealsQuery = useQuery<(Coupon & { distance: number })[]>({
     queryKey: location 
-      ? [`/api/coupons/nearby?latitude=${location.latitude}&longitude=${location.longitude}&radius=25`]
+      ? [`/api/coupons/nearby?latitude=${location.latitude}&longitude=${location.longitude}&radius=10`]
       : ['/api/coupons/nearby'],
     enabled: !!location,
   });
@@ -131,7 +131,7 @@ export default function MapPage() {
 
           {location && (
             <p className="text-sm text-muted-foreground mt-2">
-              Showing deals within 25 miles of {location.city || searchedZip}
+              Showing deals within 10 miles of {location.city || searchedZip}
             </p>
           )}
         </div>
