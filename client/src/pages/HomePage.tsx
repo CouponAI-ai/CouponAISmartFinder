@@ -32,6 +32,11 @@ export default function HomePage() {
 
   const savedCouponIds = new Set(savedCoupons.map((sc) => sc.couponId));
 
+  // Filter deals by selected category
+  const displayedDeals = selectedCategory 
+    ? trendingDeals.filter(deal => deal.category === selectedCategory)
+    : trendingDeals;
+
   const handleSave = async (couponId: string) => {
     const isSaved = savedCouponIds.has(couponId);
     
@@ -145,13 +150,13 @@ export default function HomePage() {
               />
             ))}
           </div>
-        ) : trendingDeals.length === 0 ? (
+        ) : displayedDeals.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No deals available</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {trendingDeals.map((deal) => (
+            {displayedDeals.map((deal) => (
               <DealCard
                 key={deal.id}
                 id={deal.id}
