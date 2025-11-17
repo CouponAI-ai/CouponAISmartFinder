@@ -2,46 +2,7 @@
 
 ## Overview
 
-CouponAI is a mobile-first web application designed to help users discover, save, and organize coupons and deals from multiple stores. The platform features AI-powered personalized recommendations using OpenAI's API, location-based deal discovery with geocoding, and a comprehensive browsing experience optimized for mobile devices. The application emphasizes quick deal scanning, thumb-friendly navigation, and clear discount visibility, drawing inspiration from modern shopping apps like Honey, Rakuten, and Groupon.
-
-## Project Status
-**Current State**: ✅ Fully functional MVP with redesigned UI - November 13, 2025
-
-### Zip Code Search with OpenStreetMap (November 16, 2025)
-Complete implementation of location-based deal discovery with boundary visualization:
-- ✅ New Map page with zip code search input
-- ✅ Nominatim API geocoding (OpenStreetMap) - converts zip code to coordinates
-- ✅ React Leaflet integration - interactive map with store markers
-- ✅ **Town Boundary Visualization** - rectangular overlay showing search area
-  - Semi-transparent purple fill (10% opacity) with 2px purple border (60% opacity)
-  - Uses Nominatim bounding box data (always available for zip codes)
-  - Map auto-fits to display entire boundary area
-  - Boundary visible even when 0 deals found (provides visual context)
-- ✅ Nearby deals API - finds stores within 25-mile radius
-- ✅ Visual map markers with popups showing deal details
-- ✅ Deals list sorted by distance
-- ✅ Toast notifications and error handling
-- ✅ Bottom navigation updated with Map tab
-- ✅ All React Query patterns followed correctly
-- ✅ Comprehensive e2e testing completed
-
-### Latest UI Redesign (November 13, 2025)
-Complete UI overhaul to match original design screenshots:
-- ✅ DealCard completely redesigned: store info on top row, HUGE purple discount (text-5xl), category as plain text, claim count ("X people claimed this"), full-width "View Deal" button
-- ✅ HomePage updated: cleaner header with CouponAI logo + search + theme toggle, simplified hero, "Picked For You" section replaces "Trending Now"
-- ✅ All LSP type errors fixed: DealDetailModal now uses proper Coupon type from schema
-- ✅ All pages updated: Browse, AI Picks, Saved all use new card design
-- ✅ All functionality tested and working: save/unsave, view details, navigation, geocoding
-
-### Initial Build (November 13, 2025)
-Complete rebuild of CouponAI application with all features:
-- ✅ All 5 pages implemented (Home, Browse, AI Picks, Saved, Profile)
-- ✅ Complete backend with Express API and in-memory storage
-- ✅ OpenAI integration for AI-powered recommendations
-- ✅ Geocoding backend with Haversine distance calculation
-- ✅ Location-based deals via `/api/coupons/nearby` endpoint
-- ✅ End-to-end testing completed successfully
-- ✅ All core functionality verified and working
+CouponAI is a mobile-first web application designed to help users discover, save, and organize coupons and deals from multiple stores. It features AI-powered personalized recommendations using OpenAI's API, location-based deal discovery with geocoding and real business data from OpenStreetMap, and a comprehensive browsing experience optimized for mobile devices. The platform emphasizes quick deal scanning, thumb-friendly navigation, and clear discount visibility, aiming to provide a modern and efficient coupon discovery experience.
 
 ## User Preferences
 
@@ -51,251 +12,46 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Technology Stack:**
-- React with TypeScript for type-safe component development
-- Vite as the build tool and development server
-- Wouter for lightweight client-side routing
-- TanStack Query (React Query) for server state management and caching
-
-**UI Framework:**
-- Shadcn UI component library with Radix UI primitives
-- Tailwind CSS for utility-first styling with custom design tokens
-- Mobile-first responsive design with card-based layouts
-
-**Component Structure:**
-- Page-based architecture with six main routes: Home, Browse, AI Picks, Saved, Map, and Profile
-- Reusable components including DealCard, DealDetailModal, MapView, and BottomNav
-- Fixed bottom navigation bar for mobile-optimized thumb reach
-- MapView component with React Leaflet for interactive maps
-
-**Design Philosophy:**
-- Mobile-first priority with single-column layouts on mobile, grid layouts on larger screens
-- Emphasis on scannable information with discount amounts as visual anchors
-- Minimum 44px tap targets for touch optimization
-- Purple/blue gradient theme using Inter/DM Sans fonts with extrabold discount displays
-
-**State Management:**
-- React Query handles all server state with automatic caching and invalidation
-- Local component state for UI interactions (modals, filters, search)
-- Optimistic updates for save/unsave operations
+The frontend is built with React and TypeScript, using Vite for development and a mobile-first responsive design. UI is crafted with Shadcn UI, Radix UI primitives, and Tailwind CSS, featuring a purple/blue gradient theme and card-based layouts. Wouter handles client-side routing, and TanStack Query manages server state with caching. Key components include `DealCard`, `DealDetailModal`, `MapView` (with React Leaflet for interactive maps), and a fixed `BottomNav` for mobile optimization.
 
 ### Backend Architecture
 
-**Server Framework:**
-- Express.js with TypeScript running on Node.js
-- RESTful API design with clear route separation
-- Custom middleware for request logging and error handling
-
-**Data Storage Strategy:**
-- In-memory storage (MemStorage class) suitable for MVP
-- Designed with interface abstraction (IStorage) to allow easy migration to PostgreSQL
-- Drizzle ORM configured for future database integration with schema already defined
-- Sample data includes 10 diverse coupons with location coordinates
-
-**API Endpoints:**
-- `/api/coupons` - Get all coupons
-- `/api/coupons/trending` - Get trending deals
-- `/api/coupons/nearby` - Location-based coupon discovery with distance calculation
-  - Query params: `latitude`, `longitude`, `radius` (in miles, default 10)
-  - Returns coupons sorted by distance with distance field included
-- `/api/geocode/zipcode` - **NEW** Convert zip code to coordinates
-  - Query params: `zipcode`, `country` (default "us")
-  - Returns: latitude, longitude, city, state, country, displayName
-  - Uses Nominatim (OpenStreetMap) geocoding API
-- `/api/coupons/ai-picks` - AI-powered personalized recommendations
-- `/api/coupons/category/:category` - Get deals by category
-- `/api/coupons/search?q=query` - Search deals
-- `/api/coupons/:id` - Get specific coupon
-- `/api/coupons/:id/claim` - Claim a coupon (increments claim count)
-- `/api/saved-coupons` - CRUD operations for saved deals
-- `/api/user-preferences` - User category preferences management
-
-**Business Logic:**
-- Haversine formula implementation for accurate distance calculations (in miles)
-- Category-based filtering and search functionality
-- Claim count tracking for popularity metrics
+The backend is an Express.js application with TypeScript and Node.js, providing a RESTful API. Data is currently stored in-memory (MemStorage) but designed for migration to PostgreSQL using Drizzle ORM. Real-time business data is fetched from OpenStreetMap via the Overpass API, and sample coupon deals are dynamically generated for these businesses. Haversine formula is used for accurate distance calculations. Nominatim API handles zip code geocoding. AI-powered recommendations are generated using OpenAI's API.
 
 ### Data Models
 
-**Core Entities:**
-- **Coupons**: Store name, logo, discount amount/percentage, title, description, code, category, expiration date, claim count, trending status, terms, and **geographic coordinates (latitude, longitude)**
-- **Saved Coupons**: User's bookmarked deals with timestamps
-- **User Preferences**: Category selections for personalized recommendations
-
-**Database Schema:**
-- Drizzle ORM schema defined in `shared/schema.ts`
-- PostgreSQL dialect configured with Neon serverless support
-- Zod validation schemas for runtime type checking
+Core entities include **Coupons** (with geographic coordinates), **Saved Coupons**, and **User Preferences**. A Drizzle ORM schema is defined for future PostgreSQL integration, and Zod is used for runtime type validation.
 
 ### Geocoding & Location Features
 
-**Implementation:**
-- Haversine distance formula in `server/geocoding.ts`
-- Calculates accurate distances between coordinates in miles
-- All sample coupons include San Francisco Bay Area coordinates
-- **NEW**: Nominatim API integration for zip code geocoding
-
-**Nearby Deals API:**
-- Filters coupons within specified radius
-- Returns results sorted by distance (nearest first)
-- Includes distance field in response for each coupon
-
-**Zip Code Search with OpenStreetMap (November 16, 2025):**
-- ✅ Interactive map page at `/map`
-- ✅ Zip code input with geocoding via Nominatim API
-- ✅ OpenStreetMap integration using React Leaflet
-- ✅ **Town Boundary Visualization** - rectangular overlay showing search area
-  - React Leaflet Rectangle component uses bounding box from Nominatim
-  - Semi-transparent purple fill (10% opacity) with 2px purple border (60% opacity)
-  - MapBoundsUpdater auto-fits map to show entire boundary
-  - Boundary displays even when 0 deals found (provides visual context)
-- ✅ Visual markers for each store location on map
-- ✅ Click markers to see deal popups
-- ✅ Side-by-side layout: map + deals list
-- ✅ Deals sorted by distance (nearest first)
-- ✅ 25-mile search radius (configurable)
-- ✅ Proper error handling for invalid zip codes
-- ✅ Toast notifications for search results
-- ✅ Click deal cards or markers to view full details
-- ✅ Responsive design (grid layout on desktop)
-- ✅ Bottom navigation includes Map tab
-- ✅ Comprehensive e2e testing (verified with SF, Beverly Hills, NYC zip codes)
-
-**Future Enhancements:**
-- Browser geolocation API integration (auto-detect location)
-- Persist search state across navigation
-- Adjustable search radius selector
-- Filter deals on map by category
-- Higher-fidelity boundary polygons (if available from alternative geocoding services)
+The application integrates with OpenStreetMap's Nominatim API for zip code geocoding and Overpass API to discover real-world businesses (restaurants, cafes, stores) within a 10-mile radius. It generates dynamic, realistic coupon deals for these businesses, including varied discounts, categories, and logo URLs. An interactive map displays store markers and town boundaries using React Leaflet, allowing users to search by zip code and view nearby deals sorted by distance.
 
 ### AI Integration
 
-**OpenAI Implementation:**
-- GPT-based recommendation engine analyzing user preferences and available deals
-- Fallback to category-based filtering when API key unavailable
-- Considers discount value, popularity (claim count), and category match
-- Returns top 5 personalized deals with variety across stores
-
-**Recommendation Strategy:**
-- Primary: AI analysis of user category preferences vs. available inventory
-- Fallback: Simple category matching with claim count sorting
-- Ensures recommendations span multiple stores for variety
-
-### Build and Deployment
-
-**Development:**
-- `npm run dev` - Runs both Vite dev server and Express backend with tsx
-- Hot module replacement for frontend
-- Auto-restart for backend changes
-
-**Production Build:**
-- Vite builds optimized frontend bundle
-- esbuild bundles backend into single ESM file
-- Static assets served from `dist/public`
-
-**Configuration:**
-- TypeScript with strict mode and ESNext modules
-- Path aliases (@, @shared, @assets) for clean imports
-- Environment variables for OpenAI API key and database URL
-
-### Authentication and Session Management
-
-**Current State:**
-- No authentication implemented (MVP scope)
-- Single-user experience with in-memory storage
-- Designed for future multi-user support with session management infrastructure in place (connect-pg-simple dependency)
+OpenAI's GPT-based engine provides personalized coupon recommendations based on user preferences and available deals. It includes a graceful fallback to category-based filtering if the AI service is unavailable.
 
 ## External Dependencies
 
 ### Third-Party Services
 
-**OpenAI API:**
-- Used for generating personalized coupon recommendations
-- Graceful degradation to category-based filtering when unavailable
-- Requires `OPENAI_API_KEY` environment variable
-
-**Neon Database (Configured but Not Active):**
-- PostgreSQL serverless database provider
-- Configured via Drizzle with `@neondatabase/serverless` driver
-- Schema ready for migration from in-memory storage
-- Requires `DATABASE_URL` environment variable
+-   **OpenAI API**: For AI-powered personalized coupon recommendations.
+-   **OpenStreetMap (Nominatim & Overpass APIs)**: For geocoding zip codes, discovering real businesses, and fetching location data.
+-   **Clearbit API**: Used for fetching realistic business logo URLs.
+-   **DiceBear API**: Provides fallback icons for businesses without Clearbit logos.
+-   **Neon Database (Configured but Not Active)**: PostgreSQL serverless database provider, configured via Drizzle for future use.
 
 ### Key NPM Packages
 
-**UI Components:**
-- @radix-ui/* - Accessible component primitives (dialogs, dropdowns, tabs, etc.)
-- class-variance-authority - Type-safe component variants
-- cmdk - Command menu component
-- embla-carousel-react - Touch-friendly carousels
-- lucide-react - Icon library
-
-**Data Management:**
-- drizzle-orm - TypeScript ORM with Zod integration
-- @tanstack/react-query - Server state management
-- zod - Runtime schema validation
-- date-fns - Date formatting and manipulation
-
-**Development Tools:**
-- vite - Frontend build tool with HMR
-- tsx - TypeScript execution for development
-- esbuild - Production backend bundling
-- @replit/* plugins - Development environment enhancements
+-   **UI Components**: `@radix-ui/*`, `class-variance-authority`, `cmdk`, `embla-carousel-react`, `lucide-react`.
+-   **Data Management**: `drizzle-orm`, `@tanstack/react-query`, `zod`, `date-fns`.
+-   **Development Tools**: `vite`, `tsx`, `esbuild`, `@replit/*` plugins.
 
 ### Font Dependencies
 
-**Google Fonts:**
-- Inter - Primary body font
-- DM Sans - Display font for headings
-- Outfit - Accent font for discount numbers
-- (Plus other loaded fonts: Architects Daughter, Fira Code, Geist Mono, etc.)
+-   **Google Fonts**: Inter, DM Sans, Outfit (and others like Architects Daughter, Fira Code, Geist Mono).
 
 ### Browser APIs Used
 
-- Geolocation API for location-based deal discovery (ready for frontend integration)
-- Clipboard API for coupon code copying
-- Local Storage (implicit via React Query persistence)
-
-## Testing
-
-**End-to-End Testing Completed:**
-- ✅ Homepage trending deals display and search
-- ✅ Browse page filtering, sorting, and search
-- ✅ AI Picks personalized recommendations
-- ✅ Saved deals functionality (save/unsave)
-- ✅ Profile preferences management
-- ✅ **Nearby deals API with geocoding** (latitude, longitude, radius)
-- ✅ Bottom navigation across all pages
-- ✅ Deal detail modals
-- ✅ All interactive elements and data-testid attributes
-
-**Test Results:**
-- All core functionality verified and working
-- API endpoints responding correctly
-- UI interactions behaving as expected
-- Minor accessibility improvements recommended (non-critical)
-
-## Deployment Status
-
-**Ready for Deployment:**
-The application is fully functional and ready to be published on Replit.
-
-**Environment Variables Needed:**
-- `OPENAI_API_KEY` (optional) - For AI recommendations. Falls back to category-based filtering if not provided.
-- `SESSION_SECRET` (already configured) - For session management
-
-**Next Steps:**
-1. Click "Publish" in Replit to deploy the application
-2. Add OPENAI_API_KEY environment variable if you want AI-powered recommendations
-3. The app will be available at your .replit.app domain
-
-## Future Enhancements
-
-**Planned Features:**
-- Migrate from in-memory storage to PostgreSQL for persistent data across sessions
-- Add UI components for location features (distance badges on cards, map view toggle)
-- Implement push notifications for expiring deals near user location
-- Add user authentication system for personalized saved deals and preferences across devices
-- Create deal analytics dashboard to track claim rates and user engagement
-- Enable actual geolocation in browser for automatic location detection
-- Add deal submission form for users to contribute coupons
-- Implement deal sharing functionality (social media, email)
+-   **Geolocation API**: Planned for frontend integration for auto-detecting user location.
+-   **Clipboard API**: For copying coupon codes.
+-   **Local Storage**: Implicitly used by React Query for persistence.
