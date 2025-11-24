@@ -100,6 +100,53 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Get recommended spot for deals based on location
+  app.get("/api/coupons/recommended-spot", async (req, res) => {
+    try {
+      const { latitude, longitude, radius = "25" } = req.query;
+      
+      if (!latitude || !longitude) {
+        return res.status(400).json({ 
+          error: "latitude and longitude query parameters required" 
+        });
+      }
+
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
+      const maxRadiusMiles = parseFloat(radius as string);
+
+      if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
+        return res.status(400).json({ 
+          error: "Invalid latitude, longitude, or radius values" 
+        });
+      }
+
+      // Convert miles to meters for Overpass API
+      const searchRadiusMiles = Math.min(maxRadiusMiles, 10);
+      const maxRadiusMeters = searchRadiusMiles * 1609;
+
+      // Fetch real businesses from OpenStreetMap
+      const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
+      
+      if (businesses.length === 0) {
+        return res.json({ recommended: null, reason: "No deals found in this area" });
+      }
+
+      // Generate deals for analysis
+      const deals = businesses.map((business) => 
+        generateSampleDeal(business, userLat, userLon)
+      );
+
+      // Find the best spot using scoring algorithm
+      const recommendedSpot = findRecommendedSpot(deals, userLat, userLon);
+
+      res.json(recommendedSpot);
+    } catch (error) {
+      console.error("Recommended spot error:", error);
+      res.status(500).json({ error: "Failed to find recommended spot" });
+    }
+  });
+
   // Get all coupons
   app.get("/api/coupons", async (_req, res) => {
     try {
@@ -245,6 +292,90 @@ export function registerRoutes(app: Express) {
   });
 
   return server;
+}
+
+// Find the recommended spot for deals based on scoring algorithm
+function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
+  if (deals.length === 0) {
+    return { recommended: null, reason: "No deals available" };
+  }
+
+  // Score each deal
+  const scoredDeals = deals.map(deal => {
+    let score = 0;
+    
+    // 1. Discount Value Score (0-50 points)
+    const discountValue = extractDiscountValue(deal.discountAmount);
+    score += Math.min(discountValue * 2, 50); // Cap at 50 points
+    
+    // 2. Distance Score (0-30 points) - closer is better
+    const maxDistance = 10; // miles
+    const distanceScore = Math.max(0, 30 * (1 - (deal.distance / maxDistance)));
+    score += distanceScore;
+    
+    // 3. Popularity Score (0-20 points) - based on claim count
+    const popularityScore = Math.min((deal.claimCount / 500) * 20, 20);
+    score += popularityScore;
+    
+    return {
+      deal,
+      score,
+      discountValue
+    };
+  });
+
+  // Sort by score (highest first)
+  scoredDeals.sort((a, b) => b.score - a.score);
+  
+  const winner = scoredDeals[0];
+  
+  // Generate recommendation reason
+  const reasons = [];
+  if (winner.discountValue >= 20) {
+    reasons.push(`Excellent ${winner.deal.discountAmount} discount`);
+  } else if (winner.discountValue >= 10) {
+    reasons.push(`Great ${winner.deal.discountAmount} deal`);
+  } else {
+    reasons.push(`Good ${winner.deal.discountAmount} savings`);
+  }
+  
+  if (winner.deal.distance < 2) {
+    reasons.push("Very close to you");
+  } else if (winner.deal.distance < 5) {
+    reasons.push("Nearby location");
+  }
+  
+  if (winner.deal.claimCount > 250) {
+    reasons.push("Popular among other users");
+  }
+  
+  return {
+    recommended: winner.deal,
+    score: Math.round(winner.score),
+    reason: reasons.join(" • "),
+    totalDealsAnalyzed: deals.length
+  };
+}
+
+// Extract numeric discount value for scoring
+function extractDiscountValue(discountAmount: string): number {
+  // Extract percentage (e.g., "20% OFF" -> 20)
+  const percentMatch = discountAmount.match(/(\d+)%/);
+  if (percentMatch) {
+    return parseInt(percentMatch[1]);
+  }
+  
+  // Extract dollar amount (e.g., "$15 OFF" -> 15)
+  const dollarMatch = discountAmount.match(/\$(\d+)/);
+  if (dollarMatch) {
+    return parseInt(dollarMatch[1]);
+  }
+  
+  // Special cases
+  if (discountAmount.includes("BOGO")) return 25; // Treat BOGO as 25% value
+  if (discountAmount.includes("FREE")) return 15; // Treat free item as $15 value
+  
+  return 5; // Default minimal value
 }
 
 // Helper function to generate sample coupon deals for real businesses

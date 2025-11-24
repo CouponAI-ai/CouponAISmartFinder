@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, AlertCircle } from "lucide-react";
+import { Search, Loader2, AlertCircle, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,7 +36,20 @@ export default function MapPage() {
     enabled: !!location,
   });
 
+  const recommendedSpotQuery = useQuery<{
+    recommended: (Coupon & { distance: number }) | null;
+    score: number;
+    reason: string;
+    totalDealsAnalyzed: number;
+  }>({
+    queryKey: location 
+      ? [`/api/coupons/recommended-spot?latitude=${location.latitude}&longitude=${location.longitude}&radius=10`]
+      : ['/api/coupons/recommended-spot'],
+    enabled: !!location,
+  });
+
   const nearbyDeals = nearbyDealsQuery.data || [];
+  const recommendedSpot = recommendedSpotQuery.data?.recommended;
 
   const handleSearch = async () => {
     if (!zipCode.trim()) {
@@ -57,8 +70,9 @@ export default function MapPage() {
       setLocation(data);
       setSearchedZip(zipCode);
       
-      // Invalidate nearby deals cache to force fresh fetch from Overpass API
+      // Invalidate nearby deals and recommended spot cache to force fresh fetch from Overpass API
       await queryClient.invalidateQueries({ queryKey: ['/api/coupons/nearby'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/coupons/recommended-spot'] });
       
       toast({
         title: "Location found!",
@@ -157,6 +171,7 @@ export default function MapPage() {
                 deals={nearbyDeals}
                 onViewDeal={setSelectedDeal}
                 boundingBox={location.boundingBox}
+                recommendedSpot={recommendedSpot}
               />
             </div>
 
@@ -165,6 +180,66 @@ export default function MapPage() {
               <h3 className="text-lg font-semibold sticky top-0 bg-background py-2">
                 {nearbyDeals.length} {nearbyDeals.length === 1 ? "Deal" : "Deals"} Found
               </h3>
+              
+              {/* Recommended Spot Banner */}
+              {recommendedSpotQuery.isLoading && (
+                <Card className="p-4 bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Finding the best deal for you...</p>
+                  </div>
+                </Card>
+              )}
+              {recommendedSpotQuery.isError && (
+                <Card className="p-4 bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Unable to load recommendation</p>
+                  </div>
+                </Card>
+              )}
+              {recommendedSpot && recommendedSpotQuery.data && !recommendedSpotQuery.isLoading && (
+                <Card 
+                  className="p-4 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/30 cursor-pointer hover-elevate"
+                  onClick={() => setSelectedDeal(recommendedSpot)}
+                  data-testid="card-recommended-spot"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Star className="w-5 h-5 fill-primary text-primary" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          Recommended Spot
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        {recommendedSpot.storeLogoUrl && (
+                          <img
+                            src={recommendedSpot.storeLogoUrl}
+                            alt={recommendedSpot.storeName}
+                            className="w-6 h-6 object-contain rounded"
+                          />
+                        )}
+                        <p className="font-bold text-base">{recommendedSpot.storeName}</p>
+                      </div>
+                      <h4 className="text-3xl font-bold text-primary mb-2">
+                        {recommendedSpot.discountAmount}
+                      </h4>
+                      <p className="text-sm mb-2">{recommendedSpot.title}</p>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        {recommendedSpotQuery.data.reason}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {recommendedSpot.distance.toFixed(1)} miles away • {recommendedSpot.category}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
               {nearbyDeals.length === 0 ? (
                 <Card className="p-8 text-center">
                   <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
