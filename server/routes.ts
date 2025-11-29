@@ -91,22 +91,17 @@ export function registerRoutes(app: Express) {
         generateSampleDeal(business, userLat, userLon)
       );
 
-      // Check if we're near a known area with supplemental locations
-      const nearbyZip = isNearKnownArea(userLat, userLon);
+      // Get known locations within the search radius (supplements OpenStreetMap data)
+      const knownLocations = getKnownLocationsInRadius(userLat, userLon, searchRadiusMiles);
       let knownLocationDeals: any[] = [];
       
-      if (nearbyZip) {
-        console.log(`Adding known locations for ZIP ${nearbyZip}`);
-        const knownLocations = getKnownLocationsForZip(nearbyZip);
+      if (knownLocations.length > 0) {
+        console.log(`Found ${knownLocations.length} known locations in search radius`);
         
         // Generate deals from known locations, filtering out duplicates
         for (const location of knownLocations) {
           // Check if this chain already exists in OpenStreetMap results
-          const alreadyExists = businesses.some(biz => 
-            matchesKnownLocation(biz.name, [location])
-          );
-          
-          if (!alreadyExists) {
+          if (!isDuplicateLocation(location, businesses)) {
             const deal = generateDealFromKnownLocation(location, userLat, userLon);
             if (deal) {
               knownLocationDeals.push(deal);
@@ -164,19 +159,13 @@ export function registerRoutes(app: Express) {
         generateSampleDeal(business, userLat, userLon)
       );
 
-      // Add known locations if near a known area
-      const nearbyZip = isNearKnownArea(userLat, userLon);
-      if (nearbyZip) {
-        const knownLocations = getKnownLocationsForZip(nearbyZip);
-        for (const location of knownLocations) {
-          const alreadyExists = businesses.some(biz => 
-            matchesKnownLocation(biz.name, [location])
-          );
-          if (!alreadyExists) {
-            const deal = generateDealFromKnownLocation(location, userLat, userLon);
-            if (deal) {
-              deals.push(deal);
-            }
+      // Add known locations within the search radius
+      const knownLocations = getKnownLocationsInRadius(userLat, userLon, searchRadiusMiles);
+      for (const location of knownLocations) {
+        if (!isDuplicateLocation(location, businesses)) {
+          const deal = generateDealFromKnownLocation(location, userLat, userLon);
+          if (deal) {
+            deals.push(deal);
           }
         }
       }
@@ -477,21 +466,56 @@ function generateDealFromKnownLocation(location: KnownLocation, userLat: number,
   return null; // Only return deals if we have curated coupons
 }
 
-// Check if coordinates are near a known location area (within ~15 miles)
-function isNearKnownArea(lat: number, lon: number): string | null {
-  // Check if near Magnolia, AR (71753)
-  const magnoliaLat = 33.2709;
-  const magnoliaLon = -93.2391;
-  const distanceToMagnolia = calculateDistance(
-    { latitude: lat, longitude: lon },
-    { latitude: magnoliaLat, longitude: magnoliaLon }
-  );
+// Get known locations within the search radius from user's position
+function getKnownLocationsInRadius(userLat: number, userLon: number, radiusMiles: number): KnownLocation[] {
+  const locationsInRange: KnownLocation[] = [];
   
-  if (distanceToMagnolia <= 15) {
-    return "71753";
+  for (const location of KNOWN_LOCATIONS) {
+    const distance = calculateDistance(
+      { latitude: userLat, longitude: userLon },
+      { latitude: location.latitude, longitude: location.longitude }
+    );
+    
+    // Include if within the search radius
+    if (distance <= radiusMiles) {
+      locationsInRange.push(location);
+    }
   }
   
-  return null;
+  return locationsInRange;
+}
+
+// Check if a known location already exists in OpenStreetMap results
+// Uses both name matching AND coordinate proximity to avoid duplicates
+function isDuplicateLocation(location: KnownLocation, businesses: OverpassBusiness[]): boolean {
+  for (const biz of businesses) {
+    // Check coordinate proximity (within 0.1 miles = ~160 meters)
+    const distance = calculateDistance(
+      { latitude: location.latitude, longitude: location.longitude },
+      { latitude: biz.latitude, longitude: biz.longitude }
+    );
+    
+    if (distance < 0.1) {
+      return true; // Same physical location
+    }
+    
+    // Check name matching (case-insensitive, handles variations)
+    const locName = location.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const bizName = biz.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    if (locName.includes(bizName) || bizName.includes(locName)) {
+      return true;
+    }
+    
+    // Handle specific brand variations
+    if (locName === "walmartupercenter" && bizName.includes("walmart")) return true;
+    if (locName === "walmartupercenter" && bizName.includes("walmart")) return true;
+    if (locName.includes("sonic") && bizName.includes("sonic")) return true;
+    if (locName.includes("whataburger") && bizName.includes("whata")) return true;
+    if (locName.includes("hardee") && bizName.includes("hardee")) return true;
+  }
+  
+  return false;
 }
 
 // Helper function to generate coupon deals for real businesses
