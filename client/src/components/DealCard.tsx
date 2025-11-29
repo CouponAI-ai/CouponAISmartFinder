@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, TrendingUp, Sparkles, MapPin, BadgeCheck, Info } from "lucide-react";
+import { Heart, Calendar, TrendingUp, Sparkles, MapPin, BadgeCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface DealCardProps {
@@ -96,12 +96,6 @@ export default function DealCard({
               <Badge variant="default" className="gap-1 text-xs px-2 py-0 h-5 bg-green-600 hover:bg-green-700">
                 <BadgeCheck className="w-3 h-3" />
                 Verified
-              </Badge>
-            )}
-            {!isCurated && (
-              <Badge variant="outline" className="gap-1 text-xs px-2 py-0 h-5 text-muted-foreground">
-                <Info className="w-3 h-3" />
-                Sample
               </Badge>
             )}
             {isAIPick && (

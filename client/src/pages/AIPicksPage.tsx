@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, RefreshCw, MapPin, Loader2, AlertCircle, BadgeCheck, Info, Smartphone, Star, Heart } from "lucide-react";
+import { Sparkles, RefreshCw, MapPin, Loader2, AlertCircle, BadgeCheck, Smartphone, Star, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -256,12 +256,6 @@ export default function AIPicksPage() {
                             <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                               <BadgeCheck className="w-3 h-3" />
                               Verified
-                            </Badge>
-                          )}
-                          {!(pick.deal as any).isCurated && (
-                            <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
-                              <Info className="w-3 h-3" />
-                              Sample
                             </Badge>
                           )}
                         </div>

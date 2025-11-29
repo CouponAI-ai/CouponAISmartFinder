@@ -105,10 +105,18 @@ export function registerRoutes(app: Express) {
         businesses = filteredBusinesses;
       }
 
-      // Generate sample coupon deals for each real business
-      const couponsWithDeals = businesses.map((business) => 
-        generateSampleDeal(business, userLat, userLon)
-      );
+      // Generate deals only for businesses that match curated/verified coupons
+      const verifiedDeals: any[] = [];
+      
+      for (const business of businesses) {
+        const deal = generateSampleDeal(business, userLat, userLon);
+        // Only include deals that are curated (from real verified sources)
+        if (deal.isCurated && deal.isVerified) {
+          verifiedDeals.push(deal);
+        }
+      }
+
+      console.log(`Found ${verifiedDeals.length} verified deals from OpenStreetMap businesses`);
 
       // Get known locations for the target ZIP code only
       let knownLocationDeals: any[] = [];
@@ -135,13 +143,13 @@ export function registerRoutes(app: Express) {
         }
       }
 
-      // Merge OpenStreetMap deals with known location deals
-      const allDeals = [...couponsWithDeals, ...knownLocationDeals];
+      // Merge verified OpenStreetMap deals with known location deals (all verified)
+      const allDeals = [...verifiedDeals, ...knownLocationDeals];
 
       // Sort by distance (nearest first)
       const sortedCoupons = allDeals.sort((a, b) => a.distance - b.distance);
 
-      console.log(`Returning ${sortedCoupons.length} total deals`);
+      console.log(`Returning ${sortedCoupons.length} verified deals`);
       res.json(sortedCoupons);
     } catch (error) {
       console.error("Nearby coupons error:", error);
@@ -192,10 +200,16 @@ export function registerRoutes(app: Express) {
         businesses = filteredBusinesses;
       }
 
-      // Generate deals for analysis
-      let deals = businesses.map((business) => 
-        generateSampleDeal(business, userLat, userLon)
-      );
+      // Generate deals for analysis - only include verified curated deals
+      let deals: any[] = [];
+      
+      for (const business of businesses) {
+        const deal = generateSampleDeal(business, userLat, userLon);
+        // Only include verified curated deals
+        if (deal.isCurated && deal.isVerified) {
+          deals.push(deal);
+        }
+      }
 
       // Add known locations for the target ZIP code only
       if (targetZipCode) {
@@ -211,10 +225,10 @@ export function registerRoutes(app: Express) {
       }
       
       if (deals.length === 0) {
-        return res.json({ recommended: null, reason: "No deals found in this area" });
+        return res.json({ recommended: null, reason: "No verified deals found in this area" });
       }
 
-      // Find the best spot using scoring algorithm
+      // Find the best spot using scoring algorithm (only verified deals)
       const recommendedSpot = findRecommendedSpot(deals, userLat, userLon);
 
       res.json(recommendedSpot);
@@ -288,7 +302,7 @@ export function registerRoutes(app: Express) {
         }
       }
       
-      // Add Overpass businesses
+      // Add Overpass businesses - only if they have verified curated coupons
       for (const business of businesses) {
         // Skip if already processed from known locations
         if (matchesKnownLocation(business.name, knownLocations)) continue;
@@ -300,11 +314,14 @@ export function registerRoutes(app: Express) {
         }
         
         const deal = generateSampleDeal(business, userLat, userLon);
-        deals.push(deal);
+        // Only add if it's a verified curated deal
+        if (deal.isCurated && deal.isVerified) {
+          deals.push(deal);
+        }
       }
       
-      // Filter to only verified deals for AI recommendations
-      const verifiedDeals = deals.filter(d => d.isVerified === true && d.isCurated === true);
+      // All deals are now verified (no sample deals)
+      const verifiedDeals = deals;
       
       if (verifiedDeals.length === 0) {
         return res.json({ recommendations: [], aiGenerated: false });

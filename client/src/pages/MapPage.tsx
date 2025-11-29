@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, AlertCircle, Star, Map, List, BadgeCheck, Info, Smartphone } from "lucide-react";
+import { Search, Loader2, AlertCircle, Star, Map, List, BadgeCheck, Smartphone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -297,17 +297,11 @@ export default function MapPage() {
                             />
                           )}
                           <p className="font-semibold text-sm">{deal.storeName}</p>
-                          {/* Verified/Sample Badge */}
+                          {/* Verified Badge */}
                           {(deal as any).isCurated && (deal as any).isVerified && (
                             <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                               <BadgeCheck className="w-3 h-3" />
                               Verified
-                            </Badge>
-                          )}
-                          {!(deal as any).isCurated && (
-                            <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
-                              <Info className="w-3 h-3" />
-                              Sample
                             </Badge>
                           )}
                         </div>
@@ -443,17 +437,11 @@ export default function MapPage() {
                               />
                             )}
                             <p className="font-semibold text-sm">{deal.storeName}</p>
-                            {/* Verified/Sample Badge */}
+                            {/* Verified Badge */}
                             {(deal as any).isCurated && (deal as any).isVerified && (
                               <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                                 <BadgeCheck className="w-3 h-3" />
                                 Verified
-                              </Badge>
-                            )}
-                            {!(deal as any).isCurated && (
-                              <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
-                                <Info className="w-3 h-3" />
-                                Sample
                               </Badge>
                             )}
                           </div>

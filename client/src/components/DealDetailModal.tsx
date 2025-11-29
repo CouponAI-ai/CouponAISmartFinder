@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Info, Smartphone } from "lucide-react";
+import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Smartphone } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -89,12 +89,6 @@ export default function DealDetailModal({
             <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700">
               <BadgeCheck className="w-3 h-3" />
               Verified Code
-            </Badge>
-          )}
-          {!(deal as any).isCurated && (
-            <Badge variant="outline" className="gap-1 text-muted-foreground">
-              <Info className="w-3 h-3" />
-              Sample Offer
             </Badge>
           )}
           {(deal as any).requiresApp && (

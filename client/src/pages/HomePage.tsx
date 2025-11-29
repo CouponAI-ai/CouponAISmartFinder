@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Info, Smartphone, AlertCircle, Heart } from "lucide-react";
+import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Smartphone, AlertCircle, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -294,7 +294,14 @@ export default function HomePage() {
               <h2 className="text-xl font-bold">Deals Near You</h2>
             </div>
             <Badge variant="secondary">
-              {filteredDeals.length} {filteredDeals.length === 1 ? "deal" : "deals"}
+              {nearbyDealsQuery.isLoading ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Loading...
+                </span>
+              ) : (
+                `${filteredDeals.length} ${filteredDeals.length === 1 ? "deal" : "deals"}`
+              )}
             </Badge>
           </div>
 
@@ -438,12 +445,6 @@ export default function HomePage() {
                           <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                             <BadgeCheck className="w-3 h-3" />
                             Verified
-                          </Badge>
-                        )}
-                        {!(deal as any).isCurated && (
-                          <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
-                            <Info className="w-3 h-3" />
-                            Sample
                           </Badge>
                         )}
                       </div>
