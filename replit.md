@@ -20,7 +20,11 @@ The backend is an Express.js application with TypeScript and Node.js, providing 
 
 ### Data Models
 
-Core entities include **Coupons** (with geographic coordinates), **Saved Coupons**, and **User Preferences**. A Drizzle ORM schema is defined for future PostgreSQL integration, and Zod is used for runtime type validation.
+Core entities include **Coupons** (with geographic coordinates), **Saved Deals** (stores full deal data including couponId, store info, discount, category, expiration, and source), and **User Preferences**. A Drizzle ORM schema is defined for future PostgreSQL integration, and Zod is used for runtime type validation.
+
+### Save Deals Feature
+
+Users can save deals by tapping the heart icon on deal cards across all pages (Home, Browse, AI Picks). Saved deals are stored in-memory using the SavedDeal interface which captures the complete deal data at time of saving. The Saved page displays all saved deals with tabs to filter by Active (not expired), Expired, and All deals. This approach supports dynamically generated Overpass deals that may not have stable IDs.
 
 ### Geocoding & Location Features
 
