@@ -39,15 +39,6 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
     type: "restaurant"
   },
   {
-    id: "known-hardees-magnolia",
-    name: "Hardee's",
-    address: "701 E Main St, Magnolia, AR 71753",
-    latitude: 33.2690,
-    longitude: -93.2280,
-    zipCode: "71753",
-    type: "restaurant"
-  },
-  {
     id: "known-walmart-magnolia",
     name: "Walmart Supercenter",
     address: "60 Highway 79 N, Magnolia, AR 71753",

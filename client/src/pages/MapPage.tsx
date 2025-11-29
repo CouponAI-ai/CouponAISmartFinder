@@ -147,7 +147,7 @@ export default function MapPage() {
 
           {location && (
             <p className="text-sm text-muted-foreground mt-2">
-              Showing deals within 10 miles of {location.city || searchedZip}
+              Showing deals in ZIP code {searchedZip} ({location.city || "your area"})
             </p>
           )}
         </div>
