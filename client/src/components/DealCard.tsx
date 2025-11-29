@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Calendar, TrendingUp, Sparkles, MapPin } from "lucide-react";
+import { Heart, Calendar, TrendingUp, Sparkles, MapPin, BadgeCheck, Info } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface DealCardProps {
@@ -17,6 +17,9 @@ interface DealCardProps {
   isTrending?: boolean | number;
   isSaved?: boolean;
   isAIPick?: boolean;
+  isCurated?: boolean;
+  isVerified?: boolean;
+  requiresApp?: boolean;
   onSave?: () => void;
   onViewDeal?: () => void;
   latitude?: number | null;
@@ -36,6 +39,9 @@ export default function DealCard({
   isTrending = false,
   isSaved = false,
   isAIPick = false,
+  isCurated = false,
+  isVerified = false,
+  requiresApp = false,
   onSave,
   onViewDeal,
   distance,
@@ -85,7 +91,19 @@ export default function DealCard({
           </p>
 
           {/* Badges */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0 flex-wrap">
+            {isCurated && isVerified && (
+              <Badge variant="default" className="gap-1 text-xs px-2 py-0 h-5 bg-green-600 hover:bg-green-700">
+                <BadgeCheck className="w-3 h-3" />
+                Verified
+              </Badge>
+            )}
+            {!isCurated && (
+              <Badge variant="outline" className="gap-1 text-xs px-2 py-0 h-5 text-muted-foreground">
+                <Info className="w-3 h-3" />
+                Sample
+              </Badge>
+            )}
             {isAIPick && (
               <Badge variant="default" className="gap-1 text-xs px-2 py-0 h-5">
                 <Sparkles className="w-3 h-3" />
@@ -133,9 +151,12 @@ export default function DealCard({
         {title}
       </h4>
 
-      {/* Category - plain text, not badge */}
-      <div className="mb-3">
+      {/* Category and app requirement */}
+      <div className="mb-3 flex items-center gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">{category}</p>
+        {requiresApp && (
+          <span className="text-xs text-amber-600 dark:text-amber-500">App Required</span>
+        )}
       </div>
 
       {/* Footer: Expiration + Distance */}

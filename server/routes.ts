@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
 import { calculateDistance, geocodeZipCode } from "./geocoding";
 import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
+import { findCuratedCoupon, getRandomDeal, type CuratedCoupon } from "./curatedCoupons";
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
@@ -378,14 +379,56 @@ function extractDiscountValue(discountAmount: string): number {
   return 5; // Default minimal value
 }
 
-// Helper function to generate sample coupon deals for real businesses
+// Helper function to generate coupon deals for real businesses
+// Uses curated real coupons when available, otherwise generates sample deals
 function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon: number) {
   const distance = calculateDistance(
     { latitude: userLat, longitude: userLon },
     { latitude: business.latitude, longitude: business.longitude }
   );
 
-  // Generate varied discount types
+  // Check if we have a curated real coupon for this business
+  const curatedCoupon = findCuratedCoupon(business.name);
+  
+  if (curatedCoupon) {
+    // Use REAL curated coupon data
+    const deal = getRandomDeal(curatedCoupon);
+    
+    // Parse expiration date or default to 30 days
+    let expiresAt: Date;
+    if (deal.expiresAt) {
+      expiresAt = new Date(deal.expiresAt);
+    } else {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+    }
+
+    // Generate realistic claim count for popular chains
+    const claimCount = 150 + Math.floor(Math.random() * 350);
+
+    return {
+      id: `osm-${business.id}`,
+      storeName: business.name,
+      storeLogoUrl: curatedCoupon.logoUrl,
+      discountAmount: deal.discountAmount,
+      title: deal.title,
+      description: deal.description,
+      code: deal.code,
+      category: curatedCoupon.category,
+      expiresAt: expiresAt.toISOString(),
+      claimCount,
+      trending: claimCount > 250,
+      terms: deal.terms,
+      latitude: business.latitude,
+      longitude: business.longitude,
+      distance,
+      isVerified: deal.isVerified,
+      isCurated: true, // Flag to indicate this is a real, curated coupon
+      requiresApp: deal.requiresApp || false,
+    };
+  }
+
+  // FALLBACK: Generate sample deal for non-chain businesses
   const discountTypes = [
     { amount: "$5 OFF", title: "Save $5 on your purchase", code: "SAVE5" },
     { amount: "$10 OFF", title: "Save $10 on orders over $30", code: "SAVE10" },
@@ -428,10 +471,13 @@ function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon
     expiresAt: expiresAt.toISOString(),
     claimCount,
     trending: claimCount > 250,
-    terms: "Valid for in-store purchases only. Cannot be combined with other offers.",
+    terms: "Sample offer - verify in-store. Cannot be combined with other offers.",
     latitude: business.latitude,
     longitude: business.longitude,
     distance,
+    isVerified: false,
+    isCurated: false, // Flag to indicate this is a sample deal
+    requiresApp: false,
   };
 }
 

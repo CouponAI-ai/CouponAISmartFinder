@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2, AlertCircle, Star, Map, List } from "lucide-react";
+import { Search, Loader2, AlertCircle, Star, Map, List, BadgeCheck, Info, Smartphone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MapView from "@/components/MapView";
 import DealDetailModal from "@/components/DealDetailModal";
@@ -231,7 +232,7 @@ export default function MapPage() {
                           Recommended Spot
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         {recommendedSpot.storeLogoUrl && (
                           <img
                             src={recommendedSpot.storeLogoUrl}
@@ -240,6 +241,12 @@ export default function MapPage() {
                           />
                         )}
                         <p className="font-bold text-base">{recommendedSpot.storeName}</p>
+                        {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
+                          <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                            <BadgeCheck className="w-3 h-3" />
+                            Verified
+                          </Badge>
+                        )}
                       </div>
                       <h4 className="text-3xl font-bold text-primary mb-2">
                         {recommendedSpot.discountAmount}
@@ -248,9 +255,17 @@ export default function MapPage() {
                       <p className="text-xs text-muted-foreground mb-2">
                         {recommendedSpotQuery.data.reason}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {recommendedSpot.distance.toFixed(1)} miles away • {recommendedSpot.category}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs text-muted-foreground">
+                          {recommendedSpot.distance.toFixed(1)} miles away • {recommendedSpot.category}
+                        </p>
+                        {(recommendedSpot as any).requiresApp && (
+                          <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
+                            <Smartphone className="w-3 h-3" />
+                            App Required
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -282,14 +297,35 @@ export default function MapPage() {
                             />
                           )}
                           <p className="font-semibold text-sm">{deal.storeName}</p>
+                          {/* Verified/Sample Badge */}
+                          {(deal as any).isCurated && (deal as any).isVerified && (
+                            <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                              <BadgeCheck className="w-3 h-3" />
+                              Verified
+                            </Badge>
+                          )}
+                          {!(deal as any).isCurated && (
+                            <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
+                              <Info className="w-3 h-3" />
+                              Sample
+                            </Badge>
+                          )}
                         </div>
                         <h4 className="text-2xl font-bold text-primary mb-1">
                           {deal.discountAmount}
                         </h4>
                         <p className="text-sm mb-2">{deal.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {deal.distance.toFixed(1)} miles away • {deal.category}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs text-muted-foreground">
+                            {deal.distance.toFixed(1)} miles away • {deal.category}
+                          </p>
+                          {(deal as any).requiresApp && (
+                            <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
+                              <Smartphone className="w-3 h-3" />
+                              App Required
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -341,7 +377,7 @@ export default function MapPage() {
                             Recommended Spot
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {recommendedSpot.storeLogoUrl && (
                             <img
                               src={recommendedSpot.storeLogoUrl}
@@ -350,6 +386,12 @@ export default function MapPage() {
                             />
                           )}
                           <p className="font-bold text-base">{recommendedSpot.storeName}</p>
+                          {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
+                            <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                              <BadgeCheck className="w-3 h-3" />
+                              Verified
+                            </Badge>
+                          )}
                         </div>
                         <h4 className="text-3xl font-bold text-primary mb-2">
                           {recommendedSpot.discountAmount}
@@ -358,9 +400,17 @@ export default function MapPage() {
                         <p className="text-xs text-muted-foreground mb-2">
                           {recommendedSpotQuery.data.reason}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {recommendedSpot.distance.toFixed(1)} miles away • {recommendedSpot.category}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs text-muted-foreground">
+                            {recommendedSpot.distance.toFixed(1)} miles away • {recommendedSpot.category}
+                          </p>
+                          {(recommendedSpot as any).requiresApp && (
+                            <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
+                              <Smartphone className="w-3 h-3" />
+                              App Required
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -384,7 +434,7 @@ export default function MapPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             {deal.storeLogoUrl && (
                               <img
                                 src={deal.storeLogoUrl}
@@ -393,14 +443,35 @@ export default function MapPage() {
                               />
                             )}
                             <p className="font-semibold text-sm">{deal.storeName}</p>
+                            {/* Verified/Sample Badge */}
+                            {(deal as any).isCurated && (deal as any).isVerified && (
+                              <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                                <BadgeCheck className="w-3 h-3" />
+                                Verified
+                              </Badge>
+                            )}
+                            {!(deal as any).isCurated && (
+                              <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
+                                <Info className="w-3 h-3" />
+                                Sample
+                              </Badge>
+                            )}
                           </div>
                           <h4 className="text-2xl font-bold text-primary mb-1">
                             {deal.discountAmount}
                           </h4>
                           <p className="text-sm mb-2">{deal.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {deal.distance.toFixed(1)} miles away • {deal.category}
-                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-xs text-muted-foreground">
+                              {deal.distance.toFixed(1)} miles away • {deal.category}
+                            </p>
+                            {(deal as any).requiresApp && (
+                              <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
+                                <Smartphone className="w-3 h-3" />
+                                App Required
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Card>

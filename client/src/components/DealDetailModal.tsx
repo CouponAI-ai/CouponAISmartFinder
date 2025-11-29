@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, Calendar, Check } from "lucide-react";
+import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Info, Smartphone } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -83,8 +83,30 @@ export default function DealDetailModal({
           )}
         </div>
 
+        {/* Status badges */}
+        <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+          {(deal as any).isCurated && (deal as any).isVerified && (
+            <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700">
+              <BadgeCheck className="w-3 h-3" />
+              Verified Code
+            </Badge>
+          )}
+          {!(deal as any).isCurated && (
+            <Badge variant="outline" className="gap-1 text-muted-foreground">
+              <Info className="w-3 h-3" />
+              Sample Offer
+            </Badge>
+          )}
+          {(deal as any).requiresApp && (
+            <Badge variant="secondary" className="gap-1">
+              <Smartphone className="w-3 h-3" />
+              App Required
+            </Badge>
+          )}
+        </div>
+
         {/* Category and expiration */}
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-4 mb-6 flex-wrap">
           <Badge variant="secondary">{deal.category}</Badge>
           {expirationText && (
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
