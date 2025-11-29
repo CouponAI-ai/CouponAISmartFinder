@@ -115,20 +115,20 @@ export default function HomePage() {
 
     setIsGeocoding(true);
     try {
-      const data = await queryClient.fetchQuery<GeocodedLocation>({
-        queryKey: [`/api/geocode/zipcode?zipcode=${encodeURIComponent(zipCode)}`],
+      // Fetch geocode data directly with fetch to ensure HTTP request is made
+      const response = await fetch(`/api/geocode/zipcode?zipcode=${encodeURIComponent(zipCode)}`, {
+        credentials: "include",
       });
       
-      setGeoLocation(data);
+      if (!response.ok) {
+        throw { status: response.status, message: `${response.status}` };
+      }
+      
+      const data: GeocodedLocation = await response.json();
+      
+      // Update state - these trigger the useQuery hooks
       setSearchedZip(zipCode);
-      
-      // Invalidate caches to force fresh fetch - use predicate to match any nearby/recommended queries
-      await queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey[0] as string;
-          return key?.includes('/api/coupons/nearby') || key?.includes('/api/coupons/recommended-spot');
-        }
-      });
+      setGeoLocation(data);
       
       toast({
         title: "Location found!",
