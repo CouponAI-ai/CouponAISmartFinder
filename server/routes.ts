@@ -5,6 +5,7 @@ import { getAIRecommendations } from "./ai";
 import { calculateDistance, geocodeZipCode } from "./geocoding";
 import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
 import { findCuratedCoupon, getRandomDeal, type CuratedCoupon } from "./curatedCoupons";
+import { getKnownLocationsForZip, matchesKnownLocation, type KnownLocation, KNOWN_LOCATIONS } from "./knownLocations";
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
@@ -90,10 +91,39 @@ export function registerRoutes(app: Express) {
         generateSampleDeal(business, userLat, userLon)
       );
 
-      // Sort by distance (nearest first)
-      const sortedCoupons = couponsWithDeals.sort((a, b) => a.distance - b.distance);
+      // Check if we're near a known area with supplemental locations
+      const nearbyZip = isNearKnownArea(userLat, userLon);
+      let knownLocationDeals: any[] = [];
+      
+      if (nearbyZip) {
+        console.log(`Adding known locations for ZIP ${nearbyZip}`);
+        const knownLocations = getKnownLocationsForZip(nearbyZip);
+        
+        // Generate deals from known locations, filtering out duplicates
+        for (const location of knownLocations) {
+          // Check if this chain already exists in OpenStreetMap results
+          const alreadyExists = businesses.some(biz => 
+            matchesKnownLocation(biz.name, [location])
+          );
+          
+          if (!alreadyExists) {
+            const deal = generateDealFromKnownLocation(location, userLat, userLon);
+            if (deal) {
+              knownLocationDeals.push(deal);
+            }
+          }
+        }
+        
+        console.log(`Added ${knownLocationDeals.length} deals from known locations`);
+      }
 
-      console.log(`Returning ${sortedCoupons.length} deals`);
+      // Merge OpenStreetMap deals with known location deals
+      const allDeals = [...couponsWithDeals, ...knownLocationDeals];
+
+      // Sort by distance (nearest first)
+      const sortedCoupons = allDeals.sort((a, b) => a.distance - b.distance);
+
+      console.log(`Returning ${sortedCoupons.length} total deals`);
       res.json(sortedCoupons);
     } catch (error) {
       console.error("Nearby coupons error:", error);
@@ -128,15 +158,32 @@ export function registerRoutes(app: Express) {
 
       // Fetch real businesses from OpenStreetMap
       const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
-      
-      if (businesses.length === 0) {
-        return res.json({ recommended: null, reason: "No deals found in this area" });
-      }
 
       // Generate deals for analysis
-      const deals = businesses.map((business) => 
+      let deals = businesses.map((business) => 
         generateSampleDeal(business, userLat, userLon)
       );
+
+      // Add known locations if near a known area
+      const nearbyZip = isNearKnownArea(userLat, userLon);
+      if (nearbyZip) {
+        const knownLocations = getKnownLocationsForZip(nearbyZip);
+        for (const location of knownLocations) {
+          const alreadyExists = businesses.some(biz => 
+            matchesKnownLocation(biz.name, [location])
+          );
+          if (!alreadyExists) {
+            const deal = generateDealFromKnownLocation(location, userLat, userLon);
+            if (deal) {
+              deals.push(deal);
+            }
+          }
+        }
+      }
+      
+      if (deals.length === 0) {
+        return res.json({ recommended: null, reason: "No deals found in this area" });
+      }
 
       // Find the best spot using scoring algorithm
       const recommendedSpot = findRecommendedSpot(deals, userLat, userLon);
@@ -377,6 +424,74 @@ function extractDiscountValue(discountAmount: string): number {
   if (discountAmount.includes("FREE")) return 15; // Treat free item as $15 value
   
   return 5; // Default minimal value
+}
+
+// Helper function to generate coupon deals from known locations
+// These are manually researched locations that supplement OpenStreetMap data
+function generateDealFromKnownLocation(location: KnownLocation, userLat: number, userLon: number) {
+  const distance = calculateDistance(
+    { latitude: userLat, longitude: userLon },
+    { latitude: location.latitude, longitude: location.longitude }
+  );
+
+  // Check if we have a curated coupon for this known location
+  const curatedCoupon = findCuratedCoupon(location.name);
+  
+  if (curatedCoupon) {
+    const deal = getRandomDeal(curatedCoupon);
+    
+    let expiresAt: Date;
+    if (deal.expiresAt) {
+      expiresAt = new Date(deal.expiresAt);
+    } else {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+    }
+
+    const claimCount = 150 + Math.floor(Math.random() * 350);
+
+    return {
+      id: location.id,
+      storeName: location.name,
+      storeLogoUrl: curatedCoupon.logoUrl,
+      discountAmount: deal.discountAmount,
+      title: deal.title,
+      description: deal.description,
+      code: deal.code,
+      category: curatedCoupon.category,
+      expiresAt: expiresAt.toISOString(),
+      claimCount,
+      trending: claimCount > 250,
+      terms: deal.terms,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      distance,
+      isVerified: deal.isVerified,
+      isCurated: true,
+      requiresApp: deal.requiresApp || false,
+      source: curatedCoupon.source,
+      address: location.address,
+    };
+  }
+  
+  return null; // Only return deals if we have curated coupons
+}
+
+// Check if coordinates are near a known location area (within ~15 miles)
+function isNearKnownArea(lat: number, lon: number): string | null {
+  // Check if near Magnolia, AR (71753)
+  const magnoliaLat = 33.2709;
+  const magnoliaLon = -93.2391;
+  const distanceToMagnolia = calculateDistance(
+    { latitude: lat, longitude: lon },
+    { latitude: magnoliaLat, longitude: magnoliaLon }
+  );
+  
+  if (distanceToMagnolia <= 15) {
+    return "71753";
+  }
+  
+  return null;
 }
 
 // Helper function to generate coupon deals for real businesses
