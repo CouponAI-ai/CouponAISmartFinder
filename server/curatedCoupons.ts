@@ -453,6 +453,182 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
         isVerified: true
       }
     ]
+  },
+
+  // WHATABURGER
+  {
+    brandName: "Whataburger",
+    brandAliases: ["whataburger", "whata burger", "what a burger"],
+    logoUrl: "https://logo.clearbit.com/whataburger.com",
+    category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
+    deals: [
+      {
+        code: "APP-REWARDS",
+        discountAmount: "Free Item",
+        title: "MyWhataburger Rewards",
+        description: "Earn 10 points per $1, get free reward after 5 visits",
+        terms: "Download app and join rewards (free). Redeem for shakes, onion rings, biscuits.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "SURVEY",
+        discountAmount: "Free Burger",
+        title: "Receipt Survey Reward",
+        description: "Complete survey on receipt for a free burger code",
+        terms: "Visit whataburgersurvey.com with receipt code. Valid 3 days.",
+        isVerified: true
+      },
+      {
+        code: "BIRTHDAY",
+        discountAmount: "Birthday Reward",
+        title: "Free Birthday Item",
+        description: "Get a special birthday reward through the app",
+        terms: "MyWhataburger Rewards members only. Set birthday in app.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "BUNDLE",
+        discountAmount: "$4-6 Meals",
+        title: "Bigger Better Bundles",
+        description: "Complete meal bundles starting at $4, $5, or $6",
+        terms: "At participating locations. Prices may vary.",
+        isVerified: true
+      }
+    ]
+  },
+
+  // SONIC DRIVE-IN
+  {
+    brandName: "Sonic",
+    brandAliases: ["sonic", "sonic drive-in", "sonic drive in", "sonic drivein"],
+    logoUrl: "https://logo.clearbit.com/sonicdrivein.com",
+    category: "Food & Dining",
+    source: "CouponFollow, RetailMeNot Nov 2025",
+    deals: [
+      {
+        code: "HAPPYHOUR",
+        discountAmount: "50% Off Drinks",
+        title: "Happy Hour 2-4pm",
+        description: "Half-price drinks and slushes every day from 2-4pm",
+        terms: "Available daily 2pm-4pm at all locations.",
+        isVerified: true
+      },
+      {
+        code: "TUESDAY",
+        discountAmount: "50% Off Burgers",
+        title: "Half-Price Cheeseburgers",
+        description: "50% off cheeseburgers every Tuesday 5pm to close",
+        terms: "Tuesdays only, 5pm until close. At participating locations.",
+        isVerified: true
+      },
+      {
+        code: "THURSDAY",
+        discountAmount: "$1.49 Coneys",
+        title: "$1.49 Chili Cheese Coneys",
+        description: "Chili Cheese Coneys for just $1.49 every Thursday",
+        terms: "Thursdays only at participating locations.",
+        isVerified: true
+      },
+      {
+        code: "APP-DEALS",
+        discountAmount: "BOGO + More",
+        title: "Sonic App Exclusive Deals",
+        description: "BOGO cheeseburgers, half-off Blasts, and exclusive app-only offers",
+        terms: "Download Sonic app and check deals tab weekly.",
+        isVerified: true,
+        requiresApp: true
+      }
+    ]
+  },
+
+  // HARDEE'S
+  {
+    brandName: "Hardee's",
+    brandAliases: ["hardees", "hardee's", "hardee"],
+    logoUrl: "https://logo.clearbit.com/hardees.com",
+    category: "Food & Dining",
+    source: "SimplyCodes, DealNews Nov 2025",
+    deals: [
+      {
+        code: "EMAIL-SIGNUP",
+        discountAmount: "Free Fry & Drink",
+        title: "Email Signup Offer",
+        description: "Get free small fry & drink with any 1/3 lb. Thickburger purchase",
+        terms: "Sign up for Hardee's emails at hardees.com.",
+        isVerified: true
+      },
+      {
+        code: "APP-BOGO",
+        discountAmount: "BOGO Free",
+        title: "Buy One Get One Big Angus",
+        description: "Buy one Big Angus Burger, get one free through the app",
+        terms: "App-only offer. Savings of $6+.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "SURVEY",
+        discountAmount: "Free Item",
+        title: "Receipt Survey Reward",
+        description: "Complete survey on receipt for validation code",
+        terms: "Check receipt for survey URL. Valid on next visit.",
+        isVerified: true
+      },
+      {
+        code: "SENIOR",
+        discountAmount: "10% Off",
+        title: "Senior Discount",
+        description: "10% off for seniors at most locations",
+        terms: "Ask at register. Age requirements vary by location.",
+        isVerified: true
+      }
+    ]
+  },
+
+  // WALMART
+  {
+    brandName: "Walmart",
+    brandAliases: ["walmart", "wal-mart", "walmart supercenter"],
+    logoUrl: "https://logo.clearbit.com/walmart.com",
+    category: "Retail",
+    source: "SimplyCodes, CouponFollow Nov 2025",
+    deals: [
+      {
+        code: "THANKFUL",
+        discountAmount: "$10 Off $50+",
+        title: "$10 Off Grocery Pickup",
+        description: "$10 off your first 3 pickup or delivery grocery orders of $50+",
+        terms: "New grocery customers only. Online orders at walmart.com.",
+        isVerified: true
+      },
+      {
+        code: "STUDENT50",
+        discountAmount: "50% Off Walmart+",
+        title: "Student Discount",
+        description: "Verified students get 50% off Walmart+ membership",
+        terms: "Must verify student status. $4.17/month instead of $12.95.",
+        isVerified: true
+      },
+      {
+        code: "WALMARTPLUS",
+        discountAmount: "Free Delivery",
+        title: "Walmart+ Free Shipping",
+        description: "Free shipping on all orders with Walmart+ membership",
+        terms: "30-day free trial available. Then $12.95/month.",
+        isVerified: true
+      },
+      {
+        code: "FLASH",
+        discountAmount: "Up to 65% Off",
+        title: "Weekly Flash Deals",
+        description: "Check Flash Deals page for rotating weekly discounts",
+        terms: "Deals change weekly. Visit walmart.com/flash-deals.",
+        isVerified: true
+      }
+    ]
   }
 ];
 
