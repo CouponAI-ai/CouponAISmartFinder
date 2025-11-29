@@ -105,6 +105,13 @@ export default function DealDetailModal({
           )}
         </div>
 
+        {/* Source attribution for verified codes */}
+        {(deal as any).source && (deal as any).isCurated && (
+          <p className="text-xs text-center text-muted-foreground mb-4">
+            Source: {(deal as any).source}
+          </p>
+        )}
+
         {/* Category and expiration */}
         <div className="flex items-center justify-center gap-4 mb-6 flex-wrap">
           <Badge variant="secondary">{deal.category}</Badge>

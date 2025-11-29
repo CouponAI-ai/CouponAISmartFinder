@@ -6,6 +6,7 @@ export interface CuratedCoupon {
   brandAliases: string[]; // Alternative names to match from OpenStreetMap
   logoUrl: string;
   category: string;
+  source: string; // Attribution for where codes were verified
   deals: {
     code: string;
     discountAmount: string;
@@ -26,6 +27,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["subway", "subway restaurant", "subway sandwiches"],
     logoUrl: "https://logo.clearbit.com/subway.com",
     category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "699FTL",
@@ -64,6 +66,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["domino's", "dominos", "domino's pizza", "dominos pizza"],
     logoUrl: "https://logo.clearbit.com/dominos.com",
     category: "Food & Dining",
+    source: "SimplyCodes, RetailMeNot Nov 2025",
     deals: [
       {
         code: "MIX&MATCH",
@@ -100,6 +103,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["panda express", "panda", "panda chinese"],
     logoUrl: "https://logo.clearbit.com/pandaexpress.com",
     category: "Food & Dining",
+    source: "CouponFollow, DealNews Nov 2025",
     deals: [
       {
         code: "DODGERSWIN",
@@ -135,6 +139,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["mcdonald's", "mcdonalds", "mcdonald", "mickey d's"],
     logoUrl: "https://logo.clearbit.com/mcdonalds.com",
     category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "APP-EXCLUSIVE",
@@ -171,6 +176,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["wendy's", "wendys", "wendy"],
     logoUrl: "https://logo.clearbit.com/wendys.com",
     category: "Food & Dining",
+    source: "RetailMeNot, DealNews Nov 2025",
     deals: [
       {
         code: "BIGGIE",
@@ -205,6 +211,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["taco bell", "tacobell"],
     logoUrl: "https://logo.clearbit.com/tacobell.com",
     category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "REWARDS",
@@ -232,6 +239,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["kfc", "kentucky fried chicken", "kentucky fried"],
     logoUrl: "https://logo.clearbit.com/kfc.com",
     category: "Food & Dining",
+    source: "RetailMeNot, SimplyCodes Nov 2025",
     deals: [
       {
         code: "TUESDAY10",
@@ -267,6 +275,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["pizza hut", "pizzahut"],
     logoUrl: "https://logo.clearbit.com/pizzahut.com",
     category: "Food & Dining",
+    source: "DealNews, CouponFollow Nov 2025",
     deals: [
       {
         code: "HUTHUT",
@@ -293,6 +302,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["starbucks", "starbucks coffee"],
     logoUrl: "https://logo.clearbit.com/starbucks.com",
     category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "REWARDS",
@@ -321,6 +331,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["dunkin", "dunkin'", "dunkin donuts", "dunkin' donuts"],
     logoUrl: "https://logo.clearbit.com/dunkindonuts.com",
     category: "Food & Dining",
+    source: "RetailMeNot, DealNews Nov 2025",
     deals: [
       {
         code: "STUDENT20",
@@ -355,6 +366,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["chick-fil-a", "chickfila", "chick fil a"],
     logoUrl: "https://logo.clearbit.com/chick-fil-a.com",
     category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "APP-REWARDS",
@@ -383,6 +395,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["burger king", "burgerking", "bk"],
     logoUrl: "https://logo.clearbit.com/bk.com",
     category: "Food & Dining",
+    source: "RetailMeNot, DealNews Nov 2025",
     deals: [
       {
         code: "APP-DEALS",
@@ -410,6 +423,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["walgreens", "walgreen"],
     logoUrl: "https://logo.clearbit.com/walgreens.com",
     category: "Health",
+    source: "SimplyCodes, RetailMeNot Nov 2025",
     deals: [
       {
         code: "REWARDS",
@@ -428,6 +442,7 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
     brandAliases: ["cvs", "cvs pharmacy"],
     logoUrl: "https://logo.clearbit.com/cvs.com",
     category: "Health",
+    source: "SimplyCodes, CouponFollow Nov 2025",
     deals: [
       {
         code: "EXTRABUCKS",

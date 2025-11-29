@@ -425,6 +425,7 @@ function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon
       isVerified: deal.isVerified,
       isCurated: true, // Flag to indicate this is a real, curated coupon
       requiresApp: deal.requiresApp || false,
+      source: curatedCoupon.source, // Source attribution for verified codes
     };
   }
 
