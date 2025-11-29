@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Info, Smartphone, AlertCircle } from "lucide-react";
@@ -38,6 +38,26 @@ export default function HomePage() {
   const [searchedZip, setSearchedZip] = useState("");
   const [geoLocation, setGeoLocation] = useState<GeocodedLocation | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+
+  // Hydrate state from localStorage on mount
+  useEffect(() => {
+    const savedZip = localStorage.getItem('couponai_zip');
+    const savedLocationStr = localStorage.getItem('couponai_location');
+    
+    if (savedZip) {
+      setZipCode(savedZip);
+      setSearchedZip(savedZip);
+    }
+    
+    if (savedLocationStr) {
+      try {
+        const savedLocation = JSON.parse(savedLocationStr);
+        setGeoLocation(savedLocation);
+      } catch (e) {
+        console.error('Failed to parse saved location');
+      }
+    }
+  }, []);
 
   const { data: savedCoupons = [] } = useQuery<SavedCoupon[]>({
     queryKey: ["/api/saved-coupons"],
@@ -125,6 +145,10 @@ export default function HomePage() {
       }
       
       const data: GeocodedLocation = await response.json();
+      
+      // Save to localStorage for use across pages
+      localStorage.setItem('couponai_zip', zipCode);
+      localStorage.setItem('couponai_location', JSON.stringify(data));
       
       // Update state - these trigger the useQuery hooks
       setSearchedZip(zipCode);

@@ -5,56 +5,68 @@ const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
+interface AIRecommendation {
+  deal: any;
+  reason: string;
+  score: number;
+}
+
 export async function getAIRecommendations(
-  allCoupons: Coupon[],
+  allDeals: any[],
   userCategories: string[]
-): Promise<Coupon[]> {
-  // If no OpenAI key, return category-based recommendations
-  if (!openai || !userCategories || userCategories.length === 0) {
-    return allCoupons
-      .filter((c) => userCategories.includes(c.category))
-      .sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0))
-      .slice(0, 5);
+): Promise<AIRecommendation[]> {
+  // If no deals, return empty
+  if (!allDeals || allDeals.length === 0) {
+    return [];
+  }
+
+  // If no OpenAI key, throw to use fallback
+  if (!openai) {
+    throw new Error("OpenAI not configured");
   }
 
   try {
-    // Get coupons in user's preferred categories
-    const categoryMatches = allCoupons.filter((c) =>
-      userCategories.includes(c.category)
-    );
-
-    if (categoryMatches.length === 0) {
-      return [];
-    }
-
     // Create a simplified list for AI analysis
-    const simplifiedCoupons = categoryMatches.map((c) => ({
-      id: c.id,
-      store: c.storeName,
-      discount: c.discountAmount,
-      title: c.title,
-      category: c.category,
-      claims: c.claimCount,
+    const simplifiedDeals = allDeals.map((d) => ({
+      id: d.id,
+      store: d.storeName,
+      discount: d.discountAmount,
+      title: d.title,
+      category: d.category,
+      claims: d.claimCount,
+      distance: d.distance?.toFixed(1),
     }));
 
-    const prompt = `You are a smart shopping assistant. Based on these user preferences: ${userCategories.join(", ")}
-    
-And these available deals:
-${JSON.stringify(simplifiedCoupons, null, 2)}
+    const preferencesText = userCategories.length > 0 
+      ? `User preferences: ${userCategories.join(", ")}`
+      : "No specific preferences set";
 
-Recommend the top 5 deals that would be most valuable to this user. Consider:
-1. Category match with preferences
-2. Discount amount/value
-3. Popularity (claim count)
-4. Variety across different stores
+    const prompt = `You are a smart shopping assistant analyzing local deals for a user.
 
-Return ONLY a JSON array of deal IDs in order of recommendation, like: ["id1", "id2", "id3", "id4", "id5"]`;
+${preferencesText}
+
+Available verified deals:
+${JSON.stringify(simplifiedDeals, null, 2)}
+
+Analyze these deals and recommend the top 5 most valuable ones. Consider:
+1. Discount value and savings potential
+2. Distance (closer is better)
+3. Category match with user preferences (if any)
+4. Popularity (claim count)
+
+Return a JSON array with exactly this format:
+[
+  { "id": "deal_id", "reason": "Brief personalized reason why this is a great pick" },
+  ...
+]
+
+Return ONLY the JSON array, no other text.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
-      max_tokens: 200,
+      max_tokens: 500,
     });
 
     const content = response.choices[0]?.message?.content?.trim();
@@ -63,20 +75,35 @@ Return ONLY a JSON array of deal IDs in order of recommendation, like: ["id1", "
     }
 
     // Parse the AI response
-    const recommendedIds: string[] = JSON.parse(content);
+    let aiPicks: { id: string; reason: string }[];
+    try {
+      aiPicks = JSON.parse(content);
+    } catch (parseError) {
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        aiPicks = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error("Could not parse AI response");
+      }
+    }
     
-    // Return the full coupon objects in the recommended order
-    const recommendations = recommendedIds
-      .map((id) => allCoupons.find((c) => c.id === id))
-      .filter((c): c is Coupon => c !== undefined);
+    // Map AI picks back to full deals with reasons
+    const recommendations: AIRecommendation[] = aiPicks
+      .map((pick, index) => {
+        const deal = allDeals.find((d) => d.id === pick.id);
+        if (!deal) return null;
+        return {
+          deal,
+          reason: pick.reason || "Recommended by AI based on value and location",
+          score: 100 - (index * 10), // Score decreases by rank
+        };
+      })
+      .filter((r): r is AIRecommendation => r !== null);
 
-    return recommendations.length > 0 ? recommendations : categoryMatches.slice(0, 5);
+    return recommendations.length > 0 ? recommendations : [];
   } catch (error) {
     console.error("AI recommendation error:", error);
-    // Fallback to category-based recommendations
-    return allCoupons
-      .filter((c) => userCategories.includes(c.category))
-      .sort((a, b) => (b.claimCount || 0) - (a.claimCount || 0))
-      .slice(0, 5);
+    throw error; // Let caller handle fallback
   }
 }

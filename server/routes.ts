@@ -244,20 +244,147 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get AI-recommended coupons
-  app.get("/api/coupons/ai-picks", async (_req, res) => {
+  // Get AI-recommended coupons using real Overpass deals
+  app.get("/api/coupons/ai-picks", async (req, res) => {
     try {
-      const allCoupons = await storage.getCoupons();
+      const { latitude, longitude, zipCode } = req.query;
+      
+      // If no location provided, return empty
+      if (!latitude || !longitude) {
+        return res.json({ recommendations: [], aiGenerated: false });
+      }
+
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
+      const targetZipCode = zipCode as string | undefined;
+
+      if (isNaN(userLat) || isNaN(userLon)) {
+        return res.status(400).json({ error: "Invalid latitude or longitude values" });
+      }
+
+      // Fetch real businesses from Overpass API
+      const radiusMeters = 10 * 1609.34; // 10 miles in meters
+      const businesses = await fetchNearbyBusinesses(userLat, userLon, radiusMeters);
+      
+      // Get known locations for this ZIP
+      const knownLocations = targetZipCode ? getKnownLocationsForZip(targetZipCode) : [];
+      
+      // Generate deals from businesses (same logic as nearby endpoint)
+      const deals: any[] = [];
+      const processedLocations = new Set<string>();
+      
+      // Add known locations first
+      for (const location of knownLocations) {
+        // Check if in target ZIP
+        if (targetZipCode) {
+          const inZip = await isInZipCode(location.latitude, location.longitude, targetZipCode);
+          if (!inZip) continue;
+        }
+        
+        const deal = generateDealFromKnownLocation(location, userLat, userLon);
+        if (deal) {
+          deals.push(deal);
+          processedLocations.add(location.name.toLowerCase());
+        }
+      }
+      
+      // Add Overpass businesses
+      for (const business of businesses) {
+        // Skip if already processed from known locations
+        if (matchesKnownLocation(business.name, knownLocations)) continue;
+        
+        // Check if in target ZIP
+        if (targetZipCode) {
+          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
+          if (!inZip) continue;
+        }
+        
+        const deal = generateSampleDeal(business, userLat, userLon);
+        deals.push(deal);
+      }
+      
+      // Filter to only verified deals for AI recommendations
+      const verifiedDeals = deals.filter(d => d.isVerified === true && d.isCurated === true);
+      
+      if (verifiedDeals.length === 0) {
+        return res.json({ recommendations: [], aiGenerated: false });
+      }
+      
+      // Get user preferences
       const preferences = await storage.getUserPreferences();
       const userCategories = preferences?.categories || [];
       
-      const recommendations = await getAIRecommendations(allCoupons, userCategories);
-      res.json(recommendations);
+      // Try to get AI-powered recommendations
+      let aiRecommendations: any[] = [];
+      let aiGenerated = false;
+      
+      try {
+        aiRecommendations = await getAIRecommendations(verifiedDeals, userCategories);
+        aiGenerated = true;
+      } catch (aiError) {
+        console.log("AI recommendations unavailable, falling back to scoring");
+        // Fallback: Score deals manually
+        aiRecommendations = verifiedDeals
+          .map(deal => {
+            let score = 0;
+            const discountValue = extractDiscountValue(deal.discountAmount);
+            score += Math.min(discountValue * 2, 50);
+            score += Math.max(0, 30 * (1 - (deal.distance / 10)));
+            score += Math.min((deal.claimCount / 500) * 20, 20);
+            
+            // Boost if matches user preferences
+            if (userCategories.includes(deal.category)) {
+              score += 15;
+            }
+            
+            return {
+              deal,
+              score,
+              reason: generateRecommendationReason(deal, discountValue, userCategories)
+            };
+          })
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+      }
+      
+      res.json({ 
+        recommendations: aiRecommendations,
+        aiGenerated 
+      });
     } catch (error) {
       console.error("AI picks error:", error);
       res.status(500).json({ error: "Failed to fetch AI recommendations" });
     }
   });
+  
+  // Helper function to generate recommendation reason
+  function generateRecommendationReason(deal: any, discountValue: number, userCategories: string[]): string {
+    const reasons = [];
+    
+    if (discountValue >= 25) {
+      reasons.push("Excellent savings opportunity");
+    } else if (discountValue >= 15) {
+      reasons.push("Great value deal");
+    } else {
+      reasons.push("Good discount available");
+    }
+    
+    if (deal.distance < 2) {
+      reasons.push("very close to you");
+    } else if (deal.distance < 5) {
+      reasons.push("conveniently nearby");
+    }
+    
+    if (userCategories.includes(deal.category)) {
+      reasons.push("matches your preferences");
+    }
+    
+    if (deal.claimCount > 200) {
+      reasons.push("popular with others");
+    }
+    
+    return reasons.join(", ");
+  }
 
   // Get coupons by category
   app.get("/api/coupons/category/:category", async (req, res) => {
