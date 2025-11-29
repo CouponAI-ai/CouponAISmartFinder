@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Heart, Calendar, MapPin, BadgeCheck, Info, Smartphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DealCard from "@/components/DealCard";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import DealDetailModal from "@/components/DealDetailModal";
 import BottomNav from "@/components/BottomNav";
-import type { Coupon, SavedCoupon } from "@shared/schema";
+import type { SavedDeal, Coupon } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,37 +15,37 @@ export default function SavedPage() {
   const [selectedDeal, setSelectedDeal] = useState<Coupon | null>(null);
   const { toast } = useToast();
 
-  const { data: savedCoupons = [] } = useQuery<SavedCoupon[]>({
-    queryKey: ["/api/saved-coupons"],
+  const { data: savedDeals = [] } = useQuery<SavedDeal[]>({
+    queryKey: ["/api/saved-deals"],
   });
 
-  const { data: allCoupons = [] } = useQuery<Coupon[]>({
-    queryKey: ["/api/coupons"],
-  });
+  const isExpired = (expirationDate?: Date | string | null) => {
+    if (!expirationDate) return false;
+    const expDate = typeof expirationDate === 'string' ? new Date(expirationDate) : expirationDate;
+    return expDate <= new Date();
+  };
 
-  // Get full deal info for saved coupons
-  const savedDeals = savedCoupons
-    .map((sc) => allCoupons.find((c) => c.id === sc.couponId))
-    .filter((deal): deal is Coupon => deal !== undefined);
+  const getDaysLeft = (expirationDate?: Date | string | null) => {
+    if (!expirationDate) return null;
+    const expDate = typeof expirationDate === 'string' ? new Date(expirationDate) : expirationDate;
+    const now = new Date();
+    const diff = expDate.getTime() - now.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    
+    if (days < 0) return 'Expired';
+    if (days === 0) return 'Expires Today';
+    if (days === 1) return '1 day left';
+    return `${days} days left`;
+  };
 
-  // Filter active vs expired
-  const activeDeals = savedDeals.filter(
-    (deal) => !deal.expirationDate || new Date(deal.expirationDate) > new Date()
-  );
-  const expiredDeals = savedDeals.filter(
-    (deal) => deal.expirationDate && new Date(deal.expirationDate) <= new Date()
-  );
-
-  const savedCouponIds = new Set(savedCoupons.map((sc) => sc.couponId));
+  const activeDeals = savedDeals.filter(deal => !isExpired(deal.expirationDate));
+  const expiredDeals = savedDeals.filter(deal => isExpired(deal.expirationDate));
 
   const handleUnsave = async (couponId: string) => {
     try {
-      const savedCoupon = savedCoupons.find((sc) => sc.couponId === couponId);
-      if (savedCoupon) {
-        await apiRequest("DELETE", `/api/saved-coupons/${savedCoupon.id}`, undefined);
-      }
+      await apiRequest("DELETE", `/api/saved-deals/${couponId}`, undefined);
       
-      await queryClient.invalidateQueries({ queryKey: ["/api/saved-coupons"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/saved-deals"] });
       
       toast({
         title: "Deal removed",
@@ -56,6 +58,109 @@ export default function SavedPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const convertToViewableDeal = (savedDeal: SavedDeal): Coupon => {
+    return {
+      id: savedDeal.couponId,
+      storeName: savedDeal.storeName,
+      storeLogoUrl: savedDeal.storeLogoUrl || null,
+      discountAmount: savedDeal.discountAmount,
+      discountPercentage: null,
+      title: savedDeal.title,
+      description: savedDeal.description || null,
+      code: savedDeal.code || null,
+      category: savedDeal.category,
+      expirationDate: savedDeal.expirationDate ? new Date(savedDeal.expirationDate) : null,
+      claimCount: savedDeal.claimCount || 0,
+      isTrending: savedDeal.isTrending ? 1 : 0,
+      termsAndConditions: savedDeal.terms || null,
+      latitude: savedDeal.latitude || null,
+      longitude: savedDeal.longitude || null,
+    };
+  };
+
+  const renderDealCard = (deal: SavedDeal) => {
+    const expired = isExpired(deal.expirationDate);
+    const daysLeft = getDaysLeft(deal.expirationDate);
+    
+    return (
+      <Card
+        key={deal.id}
+        className={`p-4 cursor-pointer hover-elevate ${expired ? 'opacity-60' : ''}`}
+        onClick={() => setSelectedDeal(convertToViewableDeal(deal))}
+        data-testid={`card-saved-deal-${deal.couponId}`}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {deal.storeLogoUrl && (
+                <img
+                  src={deal.storeLogoUrl}
+                  alt={deal.storeName}
+                  className="w-6 h-6 object-contain rounded"
+                />
+              )}
+              <p className="font-semibold text-sm">{deal.storeName}</p>
+              {deal.isCurated && deal.isVerified && (
+                <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                  <BadgeCheck className="w-3 h-3" />
+                  Verified
+                </Badge>
+              )}
+              {!deal.isCurated && (
+                <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-muted-foreground">
+                  <Info className="w-3 h-3" />
+                  Sample
+                </Badge>
+              )}
+              {expired && (
+                <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
+                  Expired
+                </Badge>
+              )}
+            </div>
+            <h4 className="text-2xl font-bold text-primary mb-1">
+              {deal.discountAmount}
+            </h4>
+            <p className="text-sm mb-2">{deal.title}</p>
+            <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+              <Badge variant="secondary" className="text-xs">
+                {deal.category}
+              </Badge>
+              {daysLeft && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {daysLeft}
+                </span>
+              )}
+              {deal.distance !== undefined && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {deal.distance.toFixed(1)} mi
+                </span>
+              )}
+              {deal.requiresApp && (
+                <span className="text-amber-600 dark:text-amber-500 flex items-center gap-1">
+                  <Smartphone className="w-3 h-3" />
+                  App Required
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            data-testid={`button-unsave-${deal.couponId}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUnsave(deal.couponId);
+            }}
+            className="p-2 rounded-full hover-elevate active-elevate-2 flex-shrink-0"
+          >
+            <Heart className="w-5 h-5 fill-primary text-primary" />
+          </button>
+        </div>
+      </Card>
+    );
   };
 
   return (
@@ -90,91 +195,49 @@ export default function SavedPage() {
 
           <TabsContent value="all" className="mt-6">
             {savedDeals.length === 0 ? (
-              <div className="text-center py-12">
+              <Card className="p-8 text-center">
                 <Bookmark className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-semibold mb-2">No saved deals yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Start saving your favorite deals to access them here
+                <p className="text-sm text-muted-foreground mb-6">
+                  Tap the heart icon on any deal to save it here for quick access
                 </p>
-              </div>
+                <Button variant="outline" onClick={() => window.location.href = "/"}>
+                  Browse Deals
+                </Button>
+              </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {savedDeals.map((deal) => (
-                  <DealCard
-                    key={deal.id}
-                    id={deal.id}
-                    storeName={deal.storeName}
-                    storeLogoUrl={deal.storeLogoUrl || undefined}
-                    discountAmount={deal.discountAmount}
-                    title={deal.title}
-                    description={deal.description || undefined}
-                    category={deal.category}
-                    expirationDate={deal.expirationDate}
-                    claimCount={deal.claimCount}
-                    isTrending={deal.isTrending}
-                    isSaved={true}
-                    onSave={() => handleUnsave(deal.id)}
-                    onViewDeal={() => setSelectedDeal(deal)}
-                  />
-                ))}
+              <div className="space-y-4">
+                {savedDeals.map(deal => renderDealCard(deal))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="active" className="mt-6">
             {activeDeals.length === 0 ? (
-              <div className="text-center py-12">
+              <Card className="p-8 text-center">
                 <p className="text-muted-foreground">No active saved deals</p>
-              </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  All your saved deals have expired or you haven't saved any yet
+                </p>
+              </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {activeDeals.map((deal) => (
-                  <DealCard
-                    key={deal.id}
-                    id={deal.id}
-                    storeName={deal.storeName}
-                    storeLogoUrl={deal.storeLogoUrl || undefined}
-                    discountAmount={deal.discountAmount}
-                    title={deal.title}
-                    description={deal.description || undefined}
-                    category={deal.category}
-                    expirationDate={deal.expirationDate}
-                    claimCount={deal.claimCount}
-                    isTrending={deal.isTrending}
-                    isSaved={true}
-                    onSave={() => handleUnsave(deal.id)}
-                    onViewDeal={() => setSelectedDeal(deal)}
-                  />
-                ))}
+              <div className="space-y-4">
+                {activeDeals.map(deal => renderDealCard(deal))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="expired" className="mt-6">
             {expiredDeals.length === 0 ? (
-              <div className="text-center py-12">
+              <Card className="p-8 text-center">
                 <p className="text-muted-foreground">No expired deals</p>
-              </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Expired deals will appear here for reference
+                </p>
+              </Card>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {expiredDeals.map((deal) => (
-                  <DealCard
-                    key={deal.id}
-                    id={deal.id}
-                    storeName={deal.storeName}
-                    storeLogoUrl={deal.storeLogoUrl || undefined}
-                    discountAmount={deal.discountAmount}
-                    title={deal.title}
-                    description={deal.description || undefined}
-                    category={deal.category}
-                    expirationDate={deal.expirationDate}
-                    claimCount={deal.claimCount}
-                    isTrending={deal.isTrending}
-                    isSaved={true}
-                    onSave={() => handleUnsave(deal.id)}
-                    onViewDeal={() => setSelectedDeal(deal)}
-                  />
-                ))}
+              <div className="space-y-4">
+                {expiredDeals.map(deal => renderDealCard(deal))}
               </div>
             )}
           </TabsContent>

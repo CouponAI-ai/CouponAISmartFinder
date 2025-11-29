@@ -1,4 +1,4 @@
-import type { Coupon, SavedCoupon, UserPreferences } from "@shared/schema";
+import type { Coupon, SavedCoupon, SavedDeal, UserPreferences } from "@shared/schema";
 import { nanoid } from "nanoid";
 
 // In-memory storage interface
@@ -11,10 +11,16 @@ export interface IStorage {
   searchCoupons(query: string): Promise<Coupon[]>;
   claimCoupon(id: string): Promise<void>;
   
-  // Saved coupons
+  // Saved coupons (legacy)
   getSavedCoupons(): Promise<SavedCoupon[]>;
   saveCoupon(couponId: string): Promise<SavedCoupon>;
   unsaveCoupon(id: string): Promise<void>;
+  
+  // Saved deals (full deal data)
+  getSavedDeals(): Promise<SavedDeal[]>;
+  saveDeal(deal: Omit<SavedDeal, 'id' | 'savedAt'>): Promise<SavedDeal>;
+  unsaveDeal(couponId: string): Promise<void>;
+  isSaved(couponId: string): Promise<boolean>;
   
   // User preferences
   getUserPreferences(): Promise<UserPreferences | undefined>;
@@ -25,6 +31,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private coupons: Map<string, Coupon> = new Map();
   private savedCoupons: Map<string, SavedCoupon> = new Map();
+  private savedDeals: Map<string, SavedDeal> = new Map();
   private userPreferences: UserPreferences | undefined;
 
   constructor() {
@@ -285,6 +292,44 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     return this.userPreferences;
+  }
+
+  // Saved deals methods (stores full deal data)
+  async getSavedDeals(): Promise<SavedDeal[]> {
+    return Array.from(this.savedDeals.values());
+  }
+
+  async saveDeal(deal: Omit<SavedDeal, 'id' | 'savedAt'>): Promise<SavedDeal> {
+    // Check if already saved
+    const existing = Array.from(this.savedDeals.values()).find(
+      (d) => d.couponId === deal.couponId
+    );
+    if (existing) {
+      return existing;
+    }
+    
+    const saved: SavedDeal = {
+      ...deal,
+      id: nanoid(),
+      savedAt: new Date(),
+    };
+    this.savedDeals.set(saved.id, saved);
+    return saved;
+  }
+
+  async unsaveDeal(couponId: string): Promise<void> {
+    const toDelete = Array.from(this.savedDeals.entries()).find(
+      ([_, deal]) => deal.couponId === couponId
+    );
+    if (toDelete) {
+      this.savedDeals.delete(toDelete[0]);
+    }
+  }
+
+  async isSaved(couponId: string): Promise<boolean> {
+    return Array.from(this.savedDeals.values()).some(
+      (d) => d.couponId === couponId
+    );
   }
 }
 

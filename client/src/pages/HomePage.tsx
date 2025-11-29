@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Info, Smartphone, AlertCircle } from "lucide-react";
+import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Info, Smartphone, AlertCircle, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import DealCard from "@/components/DealCard";
 import DealDetailModal from "@/components/DealDetailModal";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
-import type { Coupon, SavedCoupon } from "@shared/schema";
+import type { Coupon, SavedDeal } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,8 +59,8 @@ export default function HomePage() {
     }
   }, []);
 
-  const { data: savedCoupons = [] } = useQuery<SavedCoupon[]>({
-    queryKey: ["/api/saved-coupons"],
+  const { data: savedDeals = [] } = useQuery<SavedDeal[]>({
+    queryKey: ["/api/saved-deals"],
   });
 
   // Nearby deals from Overpass API
@@ -88,27 +88,45 @@ export default function HomePage() {
   const nearbyDeals = nearbyDealsQuery.data || [];
   const recommendedSpot = recommendedSpotQuery.data?.recommended;
 
-  const savedCouponIds = new Set(savedCoupons.map((sc) => sc.couponId));
+  const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
   // Filter nearby deals by selected category
   const filteredDeals = selectedCategory 
     ? nearbyDeals.filter(deal => deal.category === selectedCategory)
     : nearbyDeals;
 
-  const handleSave = async (couponId: string) => {
-    const isSaved = savedCouponIds.has(couponId);
+  const handleSave = async (deal: any) => {
+    const isSaved = savedDealIds.has(deal.id);
     
     try {
       if (isSaved) {
-        const savedCoupon = savedCoupons.find((sc) => sc.couponId === couponId);
-        if (savedCoupon) {
-          await apiRequest("DELETE", `/api/saved-coupons/${savedCoupon.id}`, undefined);
-        }
+        await apiRequest("DELETE", `/api/saved-deals/${deal.id}`, undefined);
       } else {
-        await apiRequest("POST", "/api/saved-coupons", { couponId });
+        // Save full deal data
+        await apiRequest("POST", "/api/saved-deals", {
+          couponId: deal.id,
+          storeName: deal.storeName,
+          storeLogoUrl: deal.storeLogoUrl,
+          discountAmount: deal.discountAmount,
+          title: deal.title,
+          description: deal.description,
+          code: deal.code,
+          category: deal.category,
+          expirationDate: deal.expirationDate || deal.expiresAt,
+          claimCount: deal.claimCount,
+          isTrending: deal.isTrending || deal.trending,
+          isVerified: deal.isVerified,
+          isCurated: deal.isCurated,
+          requiresApp: deal.requiresApp,
+          latitude: deal.latitude,
+          longitude: deal.longitude,
+          distance: deal.distance,
+          source: deal.source,
+          terms: deal.terms || deal.termsAndConditions,
+        });
       }
       
-      await queryClient.invalidateQueries({ queryKey: ["/api/saved-coupons"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/saved-deals"] });
       
       toast({
         title: isSaved ? "Deal removed" : "Deal saved!",
@@ -448,6 +466,20 @@ export default function HomePage() {
                         )}
                       </div>
                     </div>
+                    <button
+                      data-testid={`button-save-${deal.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSave(deal);
+                      }}
+                      className="p-2 rounded-full hover-elevate active-elevate-2 flex-shrink-0"
+                    >
+                      <Heart
+                        className={`w-5 h-5 ${
+                          savedDealIds.has(deal.id) ? "fill-primary text-primary" : "text-muted-foreground"
+                        }`}
+                      />
+                    </button>
                   </div>
                 </Card>
               ))}

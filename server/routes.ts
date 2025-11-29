@@ -471,6 +471,41 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Get saved deals (full deal data)
+  app.get("/api/saved-deals", async (_req, res) => {
+    try {
+      const saved = await storage.getSavedDeals();
+      res.json(saved);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch saved deals" });
+    }
+  });
+
+  // Save a deal (stores full deal data)
+  app.post("/api/saved-deals", async (req, res) => {
+    try {
+      const deal = req.body;
+      if (!deal.couponId || !deal.storeName || !deal.discountAmount || !deal.title || !deal.category) {
+        return res.status(400).json({ error: "Required deal fields missing" });
+      }
+      const saved = await storage.saveDeal(deal);
+      res.json(saved);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save deal" });
+    }
+  });
+
+  // Unsave a deal by couponId
+  app.delete("/api/saved-deals/:couponId", async (req, res) => {
+    try {
+      const { couponId } = req.params;
+      await storage.unsaveDeal(couponId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unsave deal" });
+    }
+  });
+
   // Get user preferences
   app.get("/api/user-preferences", async (_req, res) => {
     try {

@@ -43,6 +43,31 @@ export const insertSavedCouponSchema = createInsertSchema(savedCoupons).omit({
 export type InsertSavedCoupon = z.infer<typeof insertSavedCouponSchema>;
 export type SavedCoupon = typeof savedCoupons.$inferSelect;
 
+// Saved deal - stores full deal data for dynamically generated deals
+export interface SavedDeal {
+  id: string;
+  couponId: string;
+  savedAt: Date;
+  storeName: string;
+  storeLogoUrl?: string;
+  discountAmount: string;
+  title: string;
+  description?: string;
+  code?: string;
+  category: string;
+  expirationDate?: Date | string;
+  claimCount?: number;
+  isTrending?: number | boolean;
+  isVerified?: boolean;
+  isCurated?: boolean;
+  requiresApp?: boolean;
+  latitude?: number;
+  longitude?: number;
+  distance?: number;
+  source?: string;
+  terms?: string;
+}
+
 // User preferences schema
 export const userPreferences = pgTable("user_preferences", {
   id: varchar("id").primaryKey(),
