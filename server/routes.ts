@@ -372,13 +372,17 @@ export function registerRoutes(app: Express) {
 }
 
 // Find the recommended spot for deals based on scoring algorithm
+// Only recommends verified deals, not sample/generated coupons
 function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
-  if (deals.length === 0) {
-    return { recommended: null, reason: "No deals available" };
+  // Filter to only verified deals
+  const verifiedDeals = deals.filter(deal => deal.isVerified === true && deal.isCurated === true);
+  
+  if (verifiedDeals.length === 0) {
+    return { recommended: null, reason: "No verified deals available in this area" };
   }
 
-  // Score each deal
-  const scoredDeals = deals.map(deal => {
+  // Score each verified deal
+  const scoredDeals = verifiedDeals.map(deal => {
     let score = 0;
     
     // 1. Discount Value Score (0-50 points)
@@ -430,7 +434,8 @@ function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
     recommended: winner.deal,
     score: Math.round(winner.score),
     reason: reasons.join(" • "),
-    totalDealsAnalyzed: deals.length
+    totalDealsAnalyzed: deals.length,
+    verifiedDealsCount: verifiedDeals.length
   };
 }
 
