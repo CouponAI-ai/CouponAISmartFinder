@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
-import { calculateDistance, geocodeZipCode } from "./geocoding";
+import { calculateDistance, geocodeZipCode, isInZipCode } from "./geocoding";
 import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
 import { findCuratedCoupon, getRandomDeal, type CuratedCoupon } from "./curatedCoupons";
 import { getKnownLocationsForZip, matchesKnownLocation, type KnownLocation, KNOWN_LOCATIONS } from "./knownLocations";
@@ -56,7 +56,7 @@ export function registerRoutes(app: Express) {
   // Get nearby coupons based on location
   app.get("/api/coupons/nearby", async (req, res) => {
     try {
-      const { latitude, longitude, radius = "25" } = req.query;
+      const { latitude, longitude, radius = "25", zipCode } = req.query;
       
       if (!latitude || !longitude) {
         return res.status(400).json({ 
@@ -67,6 +67,7 @@ export function registerRoutes(app: Express) {
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
       const maxRadiusMiles = parseFloat(radius as string);
+      const targetZipCode = zipCode as string | undefined;
 
       if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
         return res.status(400).json({ 
@@ -80,36 +81,58 @@ export function registerRoutes(app: Express) {
       const maxRadiusMeters = searchRadiusMiles * 1609;
 
       console.log(`Searching for businesses within ${searchRadiusMiles} miles of (${userLat}, ${userLon})`);
+      if (targetZipCode) {
+        console.log(`Filtering to only show businesses in ZIP code: ${targetZipCode}`);
+      }
 
       // Fetch real businesses from OpenStreetMap
-      const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
+      let businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
       
       console.log(`Found ${businesses.length} businesses from Overpass API`);
+
+      // If a ZIP code is specified, filter businesses to only include those in the target ZIP
+      if (targetZipCode) {
+        const filteredBusinesses: OverpassBusiness[] = [];
+        
+        for (const business of businesses) {
+          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
+          if (inZip) {
+            filteredBusinesses.push(business);
+          }
+        }
+        
+        console.log(`Filtered to ${filteredBusinesses.length} businesses in ZIP ${targetZipCode}`);
+        businesses = filteredBusinesses;
+      }
 
       // Generate sample coupon deals for each real business
       const couponsWithDeals = businesses.map((business) => 
         generateSampleDeal(business, userLat, userLon)
       );
 
-      // Get known locations within the search radius (supplements OpenStreetMap data)
-      const knownLocations = getKnownLocationsInRadius(userLat, userLon, searchRadiusMiles);
+      // Get known locations for the target ZIP code only
       let knownLocationDeals: any[] = [];
       
-      if (knownLocations.length > 0) {
-        console.log(`Found ${knownLocations.length} known locations in search radius`);
+      if (targetZipCode) {
+        // Only get known locations that match the searched ZIP code exactly
+        const knownLocations = getKnownLocationsForZip(targetZipCode);
         
-        // Generate deals from known locations, filtering out duplicates
-        for (const location of knownLocations) {
-          // Check if this chain already exists in OpenStreetMap results
-          if (!isDuplicateLocation(location, businesses)) {
-            const deal = generateDealFromKnownLocation(location, userLat, userLon);
-            if (deal) {
-              knownLocationDeals.push(deal);
+        if (knownLocations.length > 0) {
+          console.log(`Found ${knownLocations.length} known locations for ZIP ${targetZipCode}`);
+          
+          // Generate deals from known locations, filtering out duplicates
+          for (const location of knownLocations) {
+            // Check if this chain already exists in OpenStreetMap results
+            if (!isDuplicateLocation(location, businesses)) {
+              const deal = generateDealFromKnownLocation(location, userLat, userLon);
+              if (deal) {
+                knownLocationDeals.push(deal);
+              }
             }
           }
+          
+          console.log(`Added ${knownLocationDeals.length} deals from known locations`);
         }
-        
-        console.log(`Added ${knownLocationDeals.length} deals from known locations`);
       }
 
       // Merge OpenStreetMap deals with known location deals
@@ -129,7 +152,7 @@ export function registerRoutes(app: Express) {
   // Get recommended spot for deals based on location
   app.get("/api/coupons/recommended-spot", async (req, res) => {
     try {
-      const { latitude, longitude, radius = "25" } = req.query;
+      const { latitude, longitude, radius = "25", zipCode } = req.query;
       
       if (!latitude || !longitude) {
         return res.status(400).json({ 
@@ -140,6 +163,7 @@ export function registerRoutes(app: Express) {
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
       const maxRadiusMiles = parseFloat(radius as string);
+      const targetZipCode = zipCode as string | undefined;
 
       if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
         return res.status(400).json({ 
@@ -152,20 +176,36 @@ export function registerRoutes(app: Express) {
       const maxRadiusMeters = searchRadiusMiles * 1609;
 
       // Fetch real businesses from OpenStreetMap
-      const businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
+      let businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
+
+      // If a ZIP code is specified, filter businesses to only include those in the target ZIP
+      if (targetZipCode) {
+        const filteredBusinesses: OverpassBusiness[] = [];
+        
+        for (const business of businesses) {
+          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
+          if (inZip) {
+            filteredBusinesses.push(business);
+          }
+        }
+        
+        businesses = filteredBusinesses;
+      }
 
       // Generate deals for analysis
       let deals = businesses.map((business) => 
         generateSampleDeal(business, userLat, userLon)
       );
 
-      // Add known locations within the search radius
-      const knownLocations = getKnownLocationsInRadius(userLat, userLon, searchRadiusMiles);
-      for (const location of knownLocations) {
-        if (!isDuplicateLocation(location, businesses)) {
-          const deal = generateDealFromKnownLocation(location, userLat, userLon);
-          if (deal) {
-            deals.push(deal);
+      // Add known locations for the target ZIP code only
+      if (targetZipCode) {
+        const knownLocations = getKnownLocationsForZip(targetZipCode);
+        for (const location of knownLocations) {
+          if (!isDuplicateLocation(location, businesses)) {
+            const deal = generateDealFromKnownLocation(location, userLat, userLon);
+            if (deal) {
+              deals.push(deal);
+            }
           }
         }
       }

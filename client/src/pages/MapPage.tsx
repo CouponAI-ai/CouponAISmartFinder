@@ -32,10 +32,10 @@ export default function MapPage() {
   const { toast } = useToast();
 
   const nearbyDealsQuery = useQuery<(Coupon & { distance: number })[]>({
-    queryKey: location 
-      ? [`/api/coupons/nearby?latitude=${location.latitude}&longitude=${location.longitude}&radius=10`]
+    queryKey: location && searchedZip
+      ? [`/api/coupons/nearby?latitude=${location.latitude}&longitude=${location.longitude}&radius=10&zipCode=${encodeURIComponent(searchedZip)}`]
       : ['/api/coupons/nearby'],
-    enabled: !!location,
+    enabled: !!location && !!searchedZip,
   });
 
   const recommendedSpotQuery = useQuery<{
@@ -44,10 +44,10 @@ export default function MapPage() {
     reason: string;
     totalDealsAnalyzed: number;
   }>({
-    queryKey: location 
-      ? [`/api/coupons/recommended-spot?latitude=${location.latitude}&longitude=${location.longitude}&radius=10`]
+    queryKey: location && searchedZip
+      ? [`/api/coupons/recommended-spot?latitude=${location.latitude}&longitude=${location.longitude}&radius=10&zipCode=${encodeURIComponent(searchedZip)}`]
       : ['/api/coupons/recommended-spot'],
-    enabled: !!location,
+    enabled: !!location && !!searchedZip,
   });
 
   const nearbyDeals = nearbyDealsQuery.data || [];
