@@ -42,6 +42,63 @@ export interface GeocodedLocation {
   boundingBox?: [number, number, number, number]; // [south, north, west, east]
 }
 
+// Reverse geocode coordinates to get ZIP code
+export async function reverseGeocodeToZip(
+  latitude: number,
+  longitude: number
+): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "CouponAI/1.0 (Replit Education Project)",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Nominatim reverse API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (!data || !data.address) {
+      return null;
+    }
+
+    // Return the postal code (ZIP code)
+    return data.address.postcode || null;
+  } catch (error) {
+    console.error("Reverse geocoding error:", error);
+    return null;
+  }
+}
+
+// Cache for reverse geocoded ZIP codes to reduce API calls
+const zipCache = new Map<string, string | null>();
+
+// Batch check if coordinates are in a specific ZIP code
+// Uses caching to avoid repeated API calls
+export async function isInZipCode(
+  latitude: number,
+  longitude: number,
+  targetZip: string
+): Promise<boolean> {
+  // Create cache key from rounded coordinates (to group nearby points)
+  const cacheKey = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+  
+  if (zipCache.has(cacheKey)) {
+    const cached = zipCache.get(cacheKey);
+    return cached === targetZip;
+  }
+  
+  const actualZip = await reverseGeocodeToZip(latitude, longitude);
+  zipCache.set(cacheKey, actualZip);
+  
+  return actualZip === targetZip;
+}
+
 export async function geocodeZipCode(
   zipCode: string,
   countryCode = "us"
