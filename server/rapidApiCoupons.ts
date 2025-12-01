@@ -25,8 +25,9 @@ export interface CouponApiResponse {
 }
 
 // In-memory cache for coupons (respects free tier rate limits)
+// Free tier usually allows ~100 calls/day, so we cache aggressively
 let couponCache: CouponApiResponse | null = null;
-const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes cache
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours cache for free tier
 
 // Brand name normalization for matching
 const BRAND_ALIASES: Record<string, string[]> = {
@@ -150,37 +151,35 @@ async function fetchFromRapidApi(): Promise<RapidApiCoupon[]> {
   }
 
   try {
-    // Try multiple coupon API endpoints for best coverage
-    // Each endpoint has different URL patterns based on the API structure
+    // Try "Get Promo Codes" API endpoints - this is the API the user subscribed to
+    // Based on RapidAPI patterns, the API likely uses one of these endpoint paths
     const endpoints = [
-      // Get Promo Codes API - different endpoint variations
+      // Most common RapidAPI coupon endpoint patterns
+      {
+        url: "https://get-promo-codes.p.rapidapi.com/codes",
+        host: "get-promo-codes.p.rapidapi.com",
+        name: "Get Promo Codes - /codes"
+      },
+      {
+        url: "https://get-promo-codes.p.rapidapi.com/promos",
+        host: "get-promo-codes.p.rapidapi.com",
+        name: "Get Promo Codes - /promos"
+      },
       {
         url: "https://get-promo-codes.p.rapidapi.com/coupons",
         host: "get-promo-codes.p.rapidapi.com",
         name: "Get Promo Codes - /coupons"
       },
       {
+        url: "https://get-promo-codes.p.rapidapi.com/deals",
+        host: "get-promo-codes.p.rapidapi.com",
+        name: "Get Promo Codes - /deals"
+      },
+      {
         url: "https://get-promo-codes.p.rapidapi.com/",
         host: "get-promo-codes.p.rapidapi.com",
         name: "Get Promo Codes - root"
       },
-      {
-        url: "https://get-promo-codes.p.rapidapi.com/api/coupons",
-        host: "get-promo-codes.p.rapidapi.com",
-        name: "Get Promo Codes - /api/coupons"
-      },
-      // Free Coupon Codes API (alternative)
-      {
-        url: "https://free-coupon-codes.p.rapidapi.com/api/coupons",
-        host: "free-coupon-codes.p.rapidapi.com",
-        name: "Free Coupon Codes"
-      },
-      // Coupons API
-      {
-        url: "https://coupons-api1.p.rapidapi.com/coupons",
-        host: "coupons-api1.p.rapidapi.com",
-        name: "Coupons API"
-      }
     ];
 
     for (const endpoint of endpoints) {
@@ -267,12 +266,17 @@ function extractDiscount(title: string): string {
 }
 
 // Get coupons with caching
+// IMPORTANT: We cache even empty results to avoid burning rate limit quota
 export async function getCouponsFromApi(): Promise<RapidApiCoupon[]> {
   const now = Date.now();
   
-  // Return cached data if still valid
+  // Return cached data if still valid (even if empty)
   if (couponCache && (now - couponCache.lastFetched) < CACHE_DURATION_MS) {
-    console.log("Returning cached coupons");
+    if (couponCache.coupons.length > 0) {
+      console.log(`Returning ${couponCache.coupons.length} cached coupons`);
+    } else {
+      console.log("Returning cached empty result (API was rate limited, will retry in 24h)");
+    }
     return couponCache.coupons;
   }
 
@@ -280,12 +284,15 @@ export async function getCouponsFromApi(): Promise<RapidApiCoupon[]> {
   console.log("Fetching fresh coupons from RapidAPI...");
   const coupons = await fetchFromRapidApi();
   
-  if (coupons.length > 0) {
-    couponCache = {
-      coupons,
-      lastFetched: now,
-      source: "RapidAPI"
-    };
+  // Cache the result even if empty (to prevent repeated API calls when rate limited)
+  couponCache = {
+    coupons,
+    lastFetched: now,
+    source: coupons.length > 0 ? "RapidAPI" : "RapidAPI (rate limited)"
+  };
+  
+  if (coupons.length === 0) {
+    console.log("Cached empty result - will not retry API for 24 hours to respect rate limits");
   }
   
   return coupons;
