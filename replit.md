@@ -34,6 +34,19 @@ The application integrates with OpenStreetMap's Nominatim API for zip code geoco
 
 OpenAI's GPT-based engine provides personalized coupon recommendations based on user preferences and available deals. It includes a graceful fallback to category-based filtering if the AI service is unavailable.
 
+### Coupon Data Sources
+
+The app uses a dual-source approach for coupon data:
+
+1. **Curated Coupons Database** (Primary): Hand-verified coupon codes from major chains including Subway, Domino's, McDonald's, Sonic, Dollar General, Walmart, and more. These are based on real promotions and are regularly updated.
+
+2. **RapidAPI Integration** (Optional Enhancement): When configured, fetches live coupons from RapidAPI's coupon services. To enable:
+   - Create a free RapidAPI account at rapidapi.com
+   - Subscribe to a coupon API's free tier (e.g., "Get Promo Codes")
+   - The RAPIDAPI_KEY secret is already configured
+
+Coupons are matched to nearby stores discovered via OpenStreetMap/Overpass API.
+
 ## External Dependencies
 
 ### Third-Party Services
