@@ -179,8 +179,8 @@ export default function MapPage() {
             {/* Map View Tab */}
             <TabsContent value="map" className="mt-0">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Map */}
-                <div className="h-[500px] lg:h-[600px]">
+                {/* Map - reduced height on mobile to account for bottom nav (h-16 = 64px) */}
+                <div className="h-[400px] lg:h-[600px]">
                   <MapView
                     center={[location.latitude, location.longitude]}
                     zoom={12}
