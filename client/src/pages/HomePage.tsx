@@ -14,7 +14,7 @@ import type { Coupon, SavedDeal } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const categories = ["Groceries", "Fashion", "Electronics", "Dining", "Travel", "Health"];
+const categories = ["Food & Dining", "Retail", "Health"];
 
 interface GeocodedLocation {
   latitude: number;
@@ -90,13 +90,31 @@ export default function HomePage() {
 
   const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
-  // Filter nearby deals by selected category
-  const categoryFilteredDeals = selectedCategory 
-    ? nearbyDeals.filter(deal => deal.category === selectedCategory)
-    : nearbyDeals;
+  // Filter nearby deals by search query and selected category
+  const searchAndCategoryFilteredDeals = nearbyDeals
+    .filter(deal => {
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        return (
+          deal.storeName.toLowerCase().includes(query) ||
+          deal.title.toLowerCase().includes(query) ||
+          deal.description?.toLowerCase().includes(query) ||
+          deal.category.toLowerCase().includes(query)
+        );
+      }
+      return true;
+    })
+    .filter(deal => {
+      // Category filter
+      if (selectedCategory) {
+        return deal.category === selectedCategory;
+      }
+      return true;
+    });
 
   // Deduplicate deals - only show each unique coupon code once per brand
-  const filteredDeals = categoryFilteredDeals.filter((deal, index, array) => {
+  const filteredDeals = searchAndCategoryFilteredDeals.filter((deal, index, array) => {
     const dealCode = (deal as any).code || '';
     const brandName = deal.storeName.toLowerCase();
     
