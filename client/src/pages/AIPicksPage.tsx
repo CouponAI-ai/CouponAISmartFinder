@@ -57,8 +57,24 @@ export default function AIPicksPage() {
     enabled: !!savedLocation && !!savedZip,
   });
 
-  const aiPicks = aiPicksData?.recommendations || [];
+  const rawAiPicks = aiPicksData?.recommendations || [];
   const isAIGenerated = aiPicksData?.aiGenerated || false;
+
+  // Deduplicate AI picks - only show each unique coupon code once per brand
+  const aiPicks = rawAiPicks.filter((pick, index, array) => {
+    const dealCode = (pick.deal as any).code || '';
+    const brandName = pick.deal.storeName.toLowerCase();
+    
+    // Find if this code+brand combination appeared earlier
+    const firstIndex = array.findIndex(p => {
+      const pCode = (p.deal as any).code || '';
+      const pBrand = p.deal.storeName.toLowerCase();
+      return pCode === dealCode && pBrand === brandName;
+    });
+    
+    // Only keep if this is the first occurrence
+    return firstIndex === index;
+  });
 
   const { data: savedDeals = [] } = useQuery<SavedDeal[]>({
     queryKey: ["/api/saved-deals"],

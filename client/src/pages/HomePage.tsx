@@ -91,9 +91,25 @@ export default function HomePage() {
   const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
   // Filter nearby deals by selected category
-  const filteredDeals = selectedCategory 
+  const categoryFilteredDeals = selectedCategory 
     ? nearbyDeals.filter(deal => deal.category === selectedCategory)
     : nearbyDeals;
+
+  // Deduplicate deals - only show each unique coupon code once per brand
+  const filteredDeals = categoryFilteredDeals.filter((deal, index, array) => {
+    const dealCode = (deal as any).code || '';
+    const brandName = deal.storeName.toLowerCase();
+    
+    // Find if this code+brand combination appeared earlier
+    const firstIndex = array.findIndex(d => {
+      const dCode = (d as any).code || '';
+      const dBrand = d.storeName.toLowerCase();
+      return dCode === dealCode && dBrand === brandName;
+    });
+    
+    // Only keep if this is the first occurrence
+    return firstIndex === index;
+  });
 
   const handleSave = async (deal: any) => {
     const isSaved = savedDealIds.has(deal.id);

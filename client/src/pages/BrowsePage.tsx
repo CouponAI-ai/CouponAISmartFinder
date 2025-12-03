@@ -73,7 +73,7 @@ export default function BrowsePage() {
   const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
   // Filter and sort deals
-  const filteredDeals = nearbyDeals
+  const sortedDeals = nearbyDeals
     .filter((deal) => {
       // Search filter
       if (searchQuery) {
@@ -120,6 +120,22 @@ export default function BrowsePage() {
       }
       return 0;
     });
+
+  // Deduplicate deals - only show each unique coupon code once per brand
+  const filteredDeals = sortedDeals.filter((deal, index, array) => {
+    const dealCode = (deal as any).code || '';
+    const brandName = deal.storeName.toLowerCase();
+    
+    // Find if this code+brand combination appeared earlier
+    const firstIndex = array.findIndex(d => {
+      const dCode = (d as any).code || '';
+      const dBrand = d.storeName.toLowerCase();
+      return dCode === dealCode && dBrand === brandName;
+    });
+    
+    // Only keep if this is the first occurrence
+    return firstIndex === index;
+  });
 
   const handleSave = async (deal: any) => {
     const isSaved = savedDealIds.has(deal.id);
