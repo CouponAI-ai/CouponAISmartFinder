@@ -178,9 +178,9 @@ export default function MapPage() {
 
             {/* Map View Tab */}
             <TabsContent value="map" className="mt-0">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Map - reduced height on mobile to account for bottom nav (h-16 = 64px) */}
-                <div className="h-[400px] lg:h-[600px]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-24">
+                {/* Map - reduced height to account for bottom nav (h-16 = 64px) */}
+                <div className="h-[300px] lg:h-[400px]">
                   <MapView
                     center={[location.latitude, location.longitude]}
                     zoom={12}
@@ -192,7 +192,7 @@ export default function MapPage() {
                 </div>
 
                 {/* Deals List (Side Panel) */}
-                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
               <h3 className="text-lg font-semibold sticky top-0 bg-background py-2">
                 {nearbyDeals.length} {nearbyDeals.length === 1 ? "Deal" : "Deals"} Found
               </h3>

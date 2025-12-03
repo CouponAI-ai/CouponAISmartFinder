@@ -51,7 +51,16 @@ const recommendedIcon = new Icon({
 
 export default function MapView({ center, zoom = 12, deals, onViewDeal, boundingBox, recommendedSpot }: MapViewProps) {
   return (
-    <div className="h-full w-full rounded-lg overflow-hidden border border-border">
+    <div className="h-full w-full rounded-lg overflow-hidden border border-border map-container-wrapper">
+      <style>{`
+        .map-container-wrapper .leaflet-bottom {
+          bottom: 10px !important;
+        }
+        .map-container-wrapper .leaflet-control-attribution {
+          font-size: 10px;
+          padding: 2px 5px;
+        }
+      `}</style>
       <MapContainer
         center={center}
         zoom={zoom}
