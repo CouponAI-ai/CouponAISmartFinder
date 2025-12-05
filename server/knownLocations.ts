@@ -46,6 +46,42 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
     longitude: -93.2350,
     zipCode: "71753",
     type: "store"
+  },
+  {
+    id: "known-mcdonalds-magnolia",
+    name: "McDonald's",
+    address: "2010 E Main St, Magnolia, AR 71753",
+    latitude: 33.2675,
+    longitude: -93.2105,
+    zipCode: "71753",
+    type: "restaurant"
+  },
+  {
+    id: "known-burgerking-magnolia",
+    name: "Burger King",
+    address: "2202 E Main St, Magnolia, AR 71753",
+    latitude: 33.2660,
+    longitude: -93.2080,
+    zipCode: "71753",
+    type: "restaurant"
+  },
+  {
+    id: "known-tacobell-magnolia",
+    name: "Taco Bell",
+    address: "1755 E Main St, Magnolia, AR 71753",
+    latitude: 33.2655,
+    longitude: -93.2160,
+    zipCode: "71753",
+    type: "restaurant"
+  },
+  {
+    id: "known-pizzahut-magnolia",
+    name: "Pizza Hut",
+    address: "1813 E Main St, Magnolia, AR 71753",
+    latitude: 33.2665,
+    longitude: -93.2145,
+    zipCode: "71753",
+    type: "restaurant"
   }
 ];
 
@@ -73,6 +109,10 @@ export function matchesKnownLocation(businessName: string, knownLocations: Known
     if (locName === "sonic drive-in" && lowerName.includes("sonic")) return true;
     if (locName === "hardee's" && lowerName.includes("hardee")) return true;
     if (locName.includes("walmart") && lowerName.includes("walmart")) return true;
+    if (locName === "mcdonald's" && lowerName.includes("mcdonald")) return true;
+    if (locName === "burger king" && (lowerName.includes("burger king") || lowerName === "bk")) return true;
+    if (locName === "taco bell" && lowerName.includes("taco")) return true;
+    if (locName === "pizza hut" && lowerName.includes("pizza hut")) return true;
   }
   
   return false;

@@ -54,6 +54,7 @@ const BRAND_ALIASES: Record<string, string[]> = {
   "Papa John's": ["papa john's", "papa johns", "papajohns"],
   "Little Caesars": ["little caesars", "little caesar's", "little ceasars"],
   "Panda Express": ["panda express", "panda"],
+  "Jimmy John's": ["jimmy john's", "jimmy johns", "jimmyjohns", "jj"],
   "Chipotle": ["chipotle", "chipotle mexican grill"],
   "Five Guys": ["five guys", "five guys burgers"],
   "Raising Cane's": ["raising cane's", "raising canes", "canes"],

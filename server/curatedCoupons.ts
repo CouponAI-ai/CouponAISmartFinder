@@ -908,6 +908,134 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
         requiresApp: true
       }
     ]
+  },
+
+  // CHICK-FIL-A - Verified Dec 2025
+  {
+    brandName: "Chick-fil-A",
+    brandAliases: ["chick-fil-a", "chickfila", "chick fil a", "cfa"],
+    logoUrl: "https://logo.clearbit.com/chick-fil-a.com",
+    category: "Food & Dining",
+    source: "Chick-fil-A App, SimplyCodes Dec 2025",
+    deals: [
+      {
+        code: "APP SIGNUP",
+        discountAmount: "Free Sandwich",
+        title: "Free Chicken Sandwich",
+        description: "Download app and get a free original chicken sandwich",
+        terms: "New app users only. One per account.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "ONE REWARDS",
+        discountAmount: "Free Items",
+        title: "Chick-fil-A One Rewards",
+        description: "Earn points on every purchase, redeem for free food",
+        terms: "Join Chick-fil-A One (free). Earn 10 points per $1.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "MOBILE ORDER",
+        discountAmount: "Skip the Line",
+        title: "Mobile Order Ahead",
+        description: "Order ahead on the app and skip the line",
+        terms: "Available at participating locations.",
+        isVerified: true,
+        requiresApp: true
+      }
+    ]
+  },
+
+  // JIMMY JOHN'S - Verified Dec 2025
+  {
+    brandName: "Jimmy John's",
+    brandAliases: ["jimmy john's", "jimmyjohns", "jimmy johns", "jj"],
+    logoUrl: "https://logo.clearbit.com/jimmyjohns.com",
+    category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Dec 2025",
+    deals: [
+      {
+        code: "SAVEBIG",
+        discountAmount: "20% Off",
+        title: "20% Off Your Order",
+        description: "Get 20% off your entire order",
+        terms: "Online orders only. May have minimum order requirement.",
+        isVerified: true,
+        expiresAt: "2025-12-31"
+      },
+      {
+        code: "FREAKY",
+        discountAmount: "$2 Off",
+        title: "$2 Off Any Sub",
+        description: "Save $2 on any 8-inch sub",
+        terms: "Online/app orders. One per order.",
+        isVerified: true
+      },
+      {
+        code: "FREEDELIVERY",
+        discountAmount: "Free Delivery",
+        title: "Free Delivery",
+        description: "Get free delivery on your order",
+        terms: "Minimum order may apply. Online/app only.",
+        isVerified: true
+      },
+      {
+        code: "REWARDS",
+        discountAmount: "Free Sub",
+        title: "Freaky Fast Rewards",
+        description: "Join rewards - get free sub after 6 purchases",
+        terms: "Download app to join. Earn stamps on each purchase.",
+        isVerified: true,
+        requiresApp: true
+      }
+    ]
+  },
+
+  // PANDA EXPRESS - Verified Dec 2025
+  {
+    brandName: "Panda Express",
+    brandAliases: ["panda express", "pandaexpress", "panda"],
+    logoUrl: "https://logo.clearbit.com/pandaexpress.com",
+    category: "Food & Dining",
+    source: "SimplyCodes, CouponFollow Dec 2025",
+    deals: [
+      {
+        code: "FAMILYMEAL",
+        discountAmount: "$30 Family Meal",
+        title: "Family Meal Deal",
+        description: "Family meal with 3 entrees and 2 sides for $30",
+        terms: "Online/app orders. Feeds 4-5 people.",
+        isVerified: true
+      },
+      {
+        code: "PANDAREWARDS",
+        discountAmount: "Free Entree",
+        title: "Panda Rewards",
+        description: "Join rewards and get a free small entree",
+        terms: "New members only. Download app to join.",
+        isVerified: true,
+        requiresApp: true
+      },
+      {
+        code: "BOWL5OFF",
+        discountAmount: "$5 Off",
+        title: "$5 Off $25+",
+        description: "Get $5 off when you spend $25 or more",
+        terms: "Online orders only. Cannot combine with other offers.",
+        isVerified: true,
+        expiresAt: "2025-12-31"
+      },
+      {
+        code: "KIDSMEAL",
+        discountAmount: "$6.50",
+        title: "Kids Meal Deal",
+        description: "Kids meal with entree, side, drink and cookie for $6.50",
+        terms: "For children 10 and under. Dine-in or online.",
+        isVerified: true
+      }
+    ]
   }
 ];
 
