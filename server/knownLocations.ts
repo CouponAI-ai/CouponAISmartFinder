@@ -16,7 +16,7 @@ export interface KnownLocation {
 
 /**
  * Known chain locations in Magnolia, Arkansas (71753)
- * Research source: Google Maps, Whataburger/Sonic/Hardee's/Walmart store locators
+ * Research source: Official store locators, Nominatim geocoding, verified Dec 2025
  */
 export const KNOWN_LOCATIONS: KnownLocation[] = [
   // Magnolia, AR 71753
@@ -32,9 +32,9 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
   {
     id: "known-sonic-magnolia",
     name: "Sonic Drive-In",
-    address: "1920 E Main St, Magnolia, AR 71753",
-    latitude: 33.2680,
-    longitude: -93.2150,
+    address: "1412 E Main St, Magnolia, AR 71753",
+    latitude: 33.2670862,
+    longitude: -93.2220136,
     zipCode: "71753",
     type: "restaurant"
   },
@@ -50,36 +50,36 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
   {
     id: "known-mcdonalds-magnolia",
     name: "McDonald's",
-    address: "2010 E Main St, Magnolia, AR 71753",
-    latitude: 33.2675,
-    longitude: -93.2105,
+    address: "1127 E Main St, Magnolia, AR 71753",
+    latitude: 33.2672274,
+    longitude: -93.2247390,
     zipCode: "71753",
     type: "restaurant"
   },
   {
     id: "known-burgerking-magnolia",
     name: "Burger King",
-    address: "2202 E Main St, Magnolia, AR 71753",
-    latitude: 33.2660,
-    longitude: -93.2080,
+    address: "1114 E Main St, Magnolia, AR 71753",
+    latitude: 33.2671972,
+    longitude: -93.2260735,
     zipCode: "71753",
     type: "restaurant"
   },
   {
     id: "known-tacobell-magnolia",
     name: "Taco Bell",
-    address: "1755 E Main St, Magnolia, AR 71753",
-    latitude: 33.2655,
-    longitude: -93.2160,
+    address: "1521 E Main St, Magnolia, AR 71753",
+    latitude: 33.2651492,
+    longitude: -93.2187267,
     zipCode: "71753",
     type: "restaurant"
   },
   {
     id: "known-pizzahut-magnolia",
     name: "Pizza Hut",
-    address: "1813 E Main St, Magnolia, AR 71753",
-    latitude: 33.2665,
-    longitude: -93.2145,
+    address: "1621 E Main St, Magnolia, AR 71753",
+    latitude: 33.2646359,
+    longitude: -93.2187662,
     zipCode: "71753",
     type: "restaurant"
   }
