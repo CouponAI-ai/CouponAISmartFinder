@@ -24,8 +24,8 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
     id: "known-whataburger-magnolia",
     name: "Whataburger",
     address: "49 Highway 79 Bypass N, Magnolia, AR 71753",
-    latitude: 33.2770,
-    longitude: -93.2297,
+    latitude: 33.2770096,
+    longitude: -93.2297271,
     zipCode: "71753",
     type: "restaurant"
   },
@@ -41,9 +41,9 @@ export const KNOWN_LOCATIONS: KnownLocation[] = [
   {
     id: "known-walmart-magnolia",
     name: "Walmart Supercenter",
-    address: "60 Highway 79 N, Magnolia, AR 71753",
-    latitude: 33.2820,
-    longitude: -93.2350,
+    address: "60 East North Street, Magnolia, AR 71753",
+    latitude: 33.2766484,
+    longitude: -93.2120513,
     zipCode: "71753",
     type: "store"
   },

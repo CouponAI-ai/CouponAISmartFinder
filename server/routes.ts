@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
-import { calculateDistance, geocodeZipCode, isInZipCode } from "./geocoding";
+import { calculateDistance, geocodeZipCode, isInZipCode, filterBusinessesByZipCode } from "./geocoding";
 import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
 import { findCuratedCoupon, getRandomDeal, type CuratedCoupon } from "./curatedCoupons";
 import { getKnownLocationsForZip, matchesKnownLocation, type KnownLocation, KNOWN_LOCATIONS } from "./knownLocations";
@@ -97,22 +97,20 @@ export function registerRoutes(app: Express) {
       
       console.log(`Found ${businesses.length} businesses from Overpass API`);
 
-      // If a ZIP code is specified, filter businesses to only include those in the target ZIP
       if (targetZipCode) {
-        const filteredBusinesses: OverpassBusiness[] = [];
+        const zipGeodata = await geocodeZipCode(targetZipCode);
+        const bbox = zipGeodata?.boundingBox;
         
-        for (const business of businesses) {
-          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
-          if (inZip) {
-            filteredBusinesses.push(business);
-          }
-        }
+        const filteredBusinesses = await filterBusinessesByZipCode(
+          businesses,
+          targetZipCode,
+          bbox,
+        ) as OverpassBusiness[];
         
         console.log(`Filtered to ${filteredBusinesses.length} businesses in ZIP ${targetZipCode}`);
         businesses = filteredBusinesses;
       }
 
-      // Generate deals using RapidAPI coupons first, then curated coupons
       const verifiedDeals: any[] = [];
       
       for (const business of businesses) {
@@ -197,16 +195,15 @@ export function registerRoutes(app: Express) {
       // Fetch real businesses from OpenStreetMap
       let businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
 
-      // If a ZIP code is specified, filter businesses to only include those in the target ZIP
       if (targetZipCode) {
-        const filteredBusinesses: OverpassBusiness[] = [];
+        const zipGeodata = await geocodeZipCode(targetZipCode);
+        const bbox = zipGeodata?.boundingBox;
         
-        for (const business of businesses) {
-          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
-          if (inZip) {
-            filteredBusinesses.push(business);
-          }
-        }
+        const filteredBusinesses = await filterBusinessesByZipCode(
+          businesses,
+          targetZipCode,
+          bbox,
+        ) as OverpassBusiness[];
         
         businesses = filteredBusinesses;
       }
