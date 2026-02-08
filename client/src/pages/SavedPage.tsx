@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bookmark, Heart, Calendar, MapPin, BadgeCheck, Smartphone } from "lucide-react";
+import { Bookmark, Heart, Calendar, MapPin, BadgeCheck, Smartphone, Store, UtensilsCrossed } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +102,12 @@ export default function SavedPage() {
                 />
               )}
               <p className="font-semibold text-sm">{deal.storeName}</p>
+              {(deal as any).storeType && (
+                <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
+                  {(deal as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
+                  {(deal as any).storeType}
+                </Badge>
+              )}
               {deal.isCurated && deal.isVerified && (
                 <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                   <BadgeCheck className="w-3 h-3" />

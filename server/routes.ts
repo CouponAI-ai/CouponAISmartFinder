@@ -758,6 +758,7 @@ function generateDealFromKnownLocation(location: KnownLocation, userLat: number,
       requiresApp: deal.requiresApp || false,
       source: curatedCoupon.source,
       address: location.address,
+      storeType: location.type === "store" ? "Store" : "Restaurant",
     };
   }
   
@@ -873,11 +874,12 @@ async function generateDealFromRealCoupons(
         latitude: business.latitude,
         longitude: business.longitude,
         distance,
-        isVerified: true, // RapidAPI coupons are live data, always verified
-        isCurated: true,  // Mark as curated to pass filter
+        isVerified: true,
+        isCurated: true,
         requiresApp: false,
         source: rapidApiCoupon.source,
         sourceUrl: rapidApiCoupon.url,
+        storeType: getStoreType(business.type),
       };
     }
   }
@@ -921,11 +923,20 @@ async function generateDealFromRealCoupons(
       isCurated: true,
       requiresApp: deal.requiresApp || false,
       source: curatedCoupon.source,
+      storeType: getStoreType(business.type),
     };
   }
 
   // No real coupon found - return null (we only want real coupons)
   return null;
+}
+
+function getStoreType(businessType: string): string {
+  const storeTypes = ["supermarket", "convenience", "department_store", "electronics", "clothes", "pharmacy", "store"];
+  if (storeTypes.some(t => businessType.toLowerCase().includes(t))) {
+    return "Store";
+  }
+  return "Restaurant";
 }
 
 // Legacy function for backwards compatibility (still used in some places)
@@ -974,6 +985,7 @@ function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon
       isCurated: true,
       requiresApp: deal.requiresApp || false,
       source: curatedCoupon.source,
+      storeType: getStoreType(business.type),
     };
   }
 

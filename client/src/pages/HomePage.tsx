@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Smartphone, AlertCircle, Heart } from "lucide-react";
+import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Smartphone, AlertCircle, Heart, Store, UtensilsCrossed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +157,7 @@ export default function HomePage() {
           distance: deal.distance,
           source: deal.source,
           terms: deal.terms || deal.termsAndConditions,
+          storeType: deal.storeType,
         });
       }
       
@@ -400,6 +401,12 @@ export default function HomePage() {
                       />
                     )}
                     <p className="font-bold text-base">{recommendedSpot.storeName}</p>
+                    {(recommendedSpot as any).storeType && (
+                      <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
+                        {(recommendedSpot as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
+                        {(recommendedSpot as any).storeType}
+                      </Badge>
+                    )}
                     {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
                       <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                         <BadgeCheck className="w-3 h-3" />
@@ -475,6 +482,12 @@ export default function HomePage() {
                           />
                         )}
                         <p className="font-semibold text-sm">{deal.storeName}</p>
+                        {(deal as any).storeType && (
+                          <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
+                            {(deal as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
+                            {(deal as any).storeType}
+                          </Badge>
+                        )}
                         {(deal as any).isCurated && (deal as any).isVerified && (
                           <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
                             <BadgeCheck className="w-3 h-3" />
