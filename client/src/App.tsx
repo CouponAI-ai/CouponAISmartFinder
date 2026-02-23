@@ -12,6 +12,7 @@ import AIPicksPage from "@/pages/AIPicksPage";
 import SavedPage from "@/pages/SavedPage";
 import ProfilePage from "@/pages/ProfilePage";
 import MapPage from "@/pages/MapPage";
+import OnlinePage from "@/pages/OnlinePage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/ai-picks" component={AIPicksPage} />
       <Route path="/saved" component={SavedPage} />
       <Route path="/map" component={MapPage} />
+      <Route path="/online" component={OnlinePage} />
       <Route path="/profile" component={ProfilePage} />
       <Route component={NotFound} />
     </Switch>

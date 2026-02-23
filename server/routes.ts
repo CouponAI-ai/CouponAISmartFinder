@@ -10,7 +10,7 @@ import { getCouponsFromApi, getCouponsForStore, findMatchingBrand, isRapidApiCon
 
 export function registerRoutes(app: Express) {
   const server = createServer(app);
-  
+
   // Password verification endpoint
   app.post("/api/auth/verify", async (req, res) => {
     try {
@@ -31,18 +31,18 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: "Failed to verify password" });
     }
   });
-  
+
   // Geocode zip code to coordinates
   app.get("/api/geocode/zipcode", async (req, res) => {
     try {
       const { zipcode, country = "us" } = req.query;
-      
+
       if (!zipcode) {
         return res.status(400).json({ error: "zipcode query parameter required" });
       }
 
       const result = await geocodeZipCode(zipcode as string, country as string);
-      
+
       if (!result) {
         return res.status(404).json({ error: "Zip code not found" });
       }
@@ -58,10 +58,10 @@ export function registerRoutes(app: Express) {
   app.get("/api/coupons/nearby", async (req, res) => {
     try {
       const { latitude, longitude, radius = "25", zipCode } = req.query;
-      
+
       if (!latitude || !longitude) {
-        return res.status(400).json({ 
-          error: "latitude and longitude query parameters required" 
+        return res.status(400).json({
+          error: "latitude and longitude query parameters required"
         });
       }
 
@@ -71,8 +71,8 @@ export function registerRoutes(app: Express) {
       const targetZipCode = zipCode as string | undefined;
 
       if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
-        return res.status(400).json({ 
-          error: "Invalid latitude, longitude, or radius values" 
+        return res.status(400).json({
+          error: "Invalid latitude, longitude, or radius values"
         });
       }
 
@@ -94,25 +94,25 @@ export function registerRoutes(app: Express) {
 
       // Fetch real businesses from OpenStreetMap
       let businesses = await fetchNearbyBusinesses(userLat, userLon, maxRadiusMeters);
-      
+
       console.log(`Found ${businesses.length} businesses from Overpass API`);
 
       if (targetZipCode) {
         const zipGeodata = await geocodeZipCode(targetZipCode);
         const bbox = zipGeodata?.boundingBox;
-        
+
         const filteredBusinesses = await filterBusinessesByZipCode(
           businesses,
           targetZipCode,
           bbox,
         ) as OverpassBusiness[];
-        
+
         console.log(`Filtered to ${filteredBusinesses.length} businesses in ZIP ${targetZipCode}`);
         businesses = filteredBusinesses;
       }
 
       const verifiedDeals: any[] = [];
-      
+
       for (const business of businesses) {
         // Try to get deal from RapidAPI or curated coupons
         const deal = await generateDealFromRealCoupons(business, userLat, userLon, rapidApiCoupons);
@@ -126,14 +126,14 @@ export function registerRoutes(app: Express) {
 
       // Get known locations for the target ZIP code only
       let knownLocationDeals: any[] = [];
-      
+
       if (targetZipCode) {
         // Only get known locations that match the searched ZIP code exactly
         const knownLocations = getKnownLocationsForZip(targetZipCode);
-        
+
         if (knownLocations.length > 0) {
           console.log(`Found ${knownLocations.length} known locations for ZIP ${targetZipCode}`);
-          
+
           // Generate deals from known locations, filtering out duplicates
           for (const location of knownLocations) {
             // Check if this chain already exists in OpenStreetMap results
@@ -144,7 +144,7 @@ export function registerRoutes(app: Express) {
               }
             }
           }
-          
+
           console.log(`Added ${knownLocationDeals.length} deals from known locations`);
         }
       }
@@ -167,10 +167,10 @@ export function registerRoutes(app: Express) {
   app.get("/api/coupons/recommended-spot", async (req, res) => {
     try {
       const { latitude, longitude, radius = "25", zipCode } = req.query;
-      
+
       if (!latitude || !longitude) {
-        return res.status(400).json({ 
-          error: "latitude and longitude query parameters required" 
+        return res.status(400).json({
+          error: "latitude and longitude query parameters required"
         });
       }
 
@@ -180,8 +180,8 @@ export function registerRoutes(app: Express) {
       const targetZipCode = zipCode as string | undefined;
 
       if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadiusMiles)) {
-        return res.status(400).json({ 
-          error: "Invalid latitude, longitude, or radius values" 
+        return res.status(400).json({
+          error: "Invalid latitude, longitude, or radius values"
         });
       }
 
@@ -198,19 +198,19 @@ export function registerRoutes(app: Express) {
       if (targetZipCode) {
         const zipGeodata = await geocodeZipCode(targetZipCode);
         const bbox = zipGeodata?.boundingBox;
-        
+
         const filteredBusinesses = await filterBusinessesByZipCode(
           businesses,
           targetZipCode,
           bbox,
         ) as OverpassBusiness[];
-        
+
         businesses = filteredBusinesses;
       }
 
       // Generate deals using RapidAPI first, then curated coupons
       let deals: any[] = [];
-      
+
       for (const business of businesses) {
         const deal = await generateDealFromRealCoupons(business, userLat, userLon, rapidApiCoupons);
         // Only include verified deals
@@ -231,7 +231,7 @@ export function registerRoutes(app: Express) {
           }
         }
       }
-      
+
       if (deals.length === 0) {
         return res.json({ recommended: null, reason: "No verified deals found in this area" });
       }
@@ -271,54 +271,56 @@ export function registerRoutes(app: Express) {
     try {
       const isConfigured = isRapidApiConfigured();
       if (!isConfigured) {
-        return res.json({ 
-          configured: false, 
-          message: "RapidAPI key not configured. Using curated coupons only.",
+        return res.json({
+          configured: false,
+          message: "External API keys not configured. Using curated coupons only.",
           couponsAvailable: 0
         });
       }
 
       const coupons = await getCouponsFromApi();
-      res.json({ 
-        configured: true, 
-        message: coupons.length > 0 
-          ? `Successfully fetched ${coupons.length} real-time coupons from RapidAPI` 
-          : "RapidAPI configured but no coupons returned. Using curated coupons.",
+      res.json({
+        configured: true,
+        message: coupons.length > 0
+          ? `Successfully fetched ${coupons.length} real-time coupons from External APIs`
+          : "External API configured but no coupons returned. Using curated coupons.",
         couponsAvailable: coupons.length,
-        source: "RapidAPI - Get Promo Codes"
+        source: "External APIs"
       });
     } catch (error: any) {
-      res.status(500).json({ 
+      res.status(500).json({
         configured: true,
         error: error.message,
-        message: "Error fetching from RapidAPI. Using curated coupons.",
+        message: "Error fetching from External API. Using curated coupons.",
         couponsAvailable: 0
       });
     }
   });
 
-  // Get raw RapidAPI coupons (for debugging/testing)
+  // Get raw RapidAPI coupons (for debugging/testing and Online Page)
   app.get("/api/coupons/rapidapi-coupons", async (req, res) => {
     try {
-      const { store, limit = "50" } = req.query;
-      let coupons = await getCouponsFromApi();
-      
+      const { store, limit = "50", refresh = "false" } = req.query;
+
+      // Pass a flag to force-refresh if requested
+      let coupons = await getCouponsFromApi(refresh === "true");
+
       // Filter by store if specified
       if (store) {
         const storeQuery = (store as string).toLowerCase();
-        coupons = coupons.filter(c => 
+        coupons = coupons.filter(c =>
           c.store.toLowerCase().includes(storeQuery) ||
           findMatchingBrand(c.store)?.toLowerCase().includes(storeQuery)
         );
       }
-      
+
       // Limit results
       const limitNum = parseInt(limit as string) || 50;
       coupons = coupons.slice(0, limitNum);
-      
+
       res.json({
         count: coupons.length,
-        source: "RapidAPI - Get Promo Codes",
+        source: "External APIs",
         coupons
       });
     } catch (error: any) {
@@ -330,7 +332,7 @@ export function registerRoutes(app: Express) {
   app.get("/api/coupons/ai-picks", async (req, res) => {
     try {
       const { latitude, longitude, zipCode } = req.query;
-      
+
       // If no location provided, return empty
       if (!latitude || !longitude) {
         return res.json({ recommendations: [], aiGenerated: false });
@@ -350,14 +352,14 @@ export function registerRoutes(app: Express) {
       // Fetch real businesses from Overpass API
       const radiusMeters = 10 * 1609.34; // 10 miles in meters
       const businesses = await fetchNearbyBusinesses(userLat, userLon, radiusMeters);
-      
+
       // Get known locations for this ZIP
       const knownLocations = targetZipCode ? getKnownLocationsForZip(targetZipCode) : [];
-      
+
       // Generate deals from businesses (same logic as nearby endpoint)
       const deals: any[] = [];
       const processedLocations = new Set<string>();
-      
+
       // Add known locations first
       for (const location of knownLocations) {
         // Check if in target ZIP
@@ -365,47 +367,47 @@ export function registerRoutes(app: Express) {
           const inZip = await isInZipCode(location.latitude, location.longitude, targetZipCode);
           if (!inZip) continue;
         }
-        
+
         const deal = generateDealFromKnownLocation(location, userLat, userLon);
         if (deal) {
           deals.push(deal);
           processedLocations.add(location.name.toLowerCase());
         }
       }
-      
+
       // Add Overpass businesses - using RapidAPI first, then curated coupons
       for (const business of businesses) {
         // Skip if already processed from known locations
         if (matchesKnownLocation(business.name, knownLocations)) continue;
-        
+
         // Check if in target ZIP
         if (targetZipCode) {
           const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
           if (!inZip) continue;
         }
-        
+
         const deal = await generateDealFromRealCoupons(business, userLat, userLon, rapidApiCoupons);
         // Only add if it's a verified deal
         if (deal && deal.isCurated && deal.isVerified) {
           deals.push(deal);
         }
       }
-      
+
       // All deals are now verified (no sample deals)
       const verifiedDeals = deals;
-      
+
       if (verifiedDeals.length === 0) {
         return res.json({ recommendations: [], aiGenerated: false });
       }
-      
+
       // Get user preferences
       const preferences = await storage.getUserPreferences();
       const userCategories = preferences?.categories || [];
-      
+
       // Try to get AI-powered recommendations
       let aiRecommendations: any[] = [];
       let aiGenerated = false;
-      
+
       try {
         aiRecommendations = await getAIRecommendations(verifiedDeals, userCategories);
         aiGenerated = true;
@@ -419,12 +421,12 @@ export function registerRoutes(app: Express) {
             score += Math.min(discountValue * 2, 50);
             score += Math.max(0, 30 * (1 - (deal.distance / 10)));
             score += Math.min((deal.claimCount / 500) * 20, 20);
-            
+
             // Boost if matches user preferences
             if (userCategories.includes(deal.category)) {
               score += 15;
             }
-            
+
             return {
               deal,
               score,
@@ -434,21 +436,21 @@ export function registerRoutes(app: Express) {
           .sort((a, b) => b.score - a.score)
           .slice(0, 5);
       }
-      
-      res.json({ 
+
+      res.json({
         recommendations: aiRecommendations,
-        aiGenerated 
+        aiGenerated
       });
     } catch (error) {
       console.error("AI picks error:", error);
       res.status(500).json({ error: "Failed to fetch AI recommendations" });
     }
   });
-  
+
   // Helper function to generate recommendation reason
   function generateRecommendationReason(deal: any, discountValue: number, userCategories: string[]): string {
     const reasons = [];
-    
+
     if (discountValue >= 25) {
       reasons.push("Excellent savings opportunity");
     } else if (discountValue >= 15) {
@@ -456,21 +458,21 @@ export function registerRoutes(app: Express) {
     } else {
       reasons.push("Good discount available");
     }
-    
+
     if (deal.distance < 2) {
       reasons.push("very close to you");
     } else if (deal.distance < 5) {
       reasons.push("conveniently nearby");
     }
-    
+
     if (userCategories.includes(deal.category)) {
       reasons.push("matches your preferences");
     }
-    
+
     if (deal.claimCount > 200) {
       reasons.push("popular with others");
     }
-    
+
     return reasons.join(", ");
   }
 
@@ -626,7 +628,7 @@ export function registerRoutes(app: Express) {
 function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
   // Filter to only verified deals
   const verifiedDeals = deals.filter(deal => deal.isVerified === true && deal.isCurated === true);
-  
+
   if (verifiedDeals.length === 0) {
     return { recommended: null, reason: "No verified deals available in this area" };
   }
@@ -634,20 +636,20 @@ function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
   // Score each verified deal
   const scoredDeals = verifiedDeals.map(deal => {
     let score = 0;
-    
+
     // 1. Discount Value Score (0-50 points)
     const discountValue = extractDiscountValue(deal.discountAmount);
     score += Math.min(discountValue * 2, 50); // Cap at 50 points
-    
+
     // 2. Distance Score (0-30 points) - closer is better
     const maxDistance = 10; // miles
     const distanceScore = Math.max(0, 30 * (1 - (deal.distance / maxDistance)));
     score += distanceScore;
-    
+
     // 3. Popularity Score (0-20 points) - based on claim count
     const popularityScore = Math.min((deal.claimCount / 500) * 20, 20);
     score += popularityScore;
-    
+
     return {
       deal,
       score,
@@ -657,9 +659,9 @@ function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
 
   // Sort by score (highest first)
   scoredDeals.sort((a, b) => b.score - a.score);
-  
+
   const winner = scoredDeals[0];
-  
+
   // Generate recommendation reason
   const reasons = [];
   if (winner.discountValue >= 20) {
@@ -669,17 +671,17 @@ function findRecommendedSpot(deals: any[], userLat: number, userLon: number) {
   } else {
     reasons.push(`Good ${winner.deal.discountAmount} savings`);
   }
-  
+
   if (winner.deal.distance < 2) {
     reasons.push("Very close to you");
   } else if (winner.deal.distance < 5) {
     reasons.push("Nearby location");
   }
-  
+
   if (winner.deal.claimCount > 250) {
     reasons.push("Popular among other users");
   }
-  
+
   return {
     recommended: winner.deal,
     score: Math.round(winner.score),
@@ -696,17 +698,17 @@ function extractDiscountValue(discountAmount: string): number {
   if (percentMatch) {
     return parseInt(percentMatch[1]);
   }
-  
+
   // Extract dollar amount (e.g., "$15 OFF" -> 15)
   const dollarMatch = discountAmount.match(/\$(\d+)/);
   if (dollarMatch) {
     return parseInt(dollarMatch[1]);
   }
-  
+
   // Special cases
   if (discountAmount.includes("BOGO")) return 25; // Treat BOGO as 25% value
   if (discountAmount.includes("FREE")) return 15; // Treat free item as $15 value
-  
+
   return 5; // Default minimal value
 }
 
@@ -720,10 +722,10 @@ function generateDealFromKnownLocation(location: KnownLocation, userLat: number,
 
   // Check if we have a curated coupon for this known location
   const curatedCoupon = findCuratedCoupon(location.name);
-  
+
   if (curatedCoupon) {
     const deal = getRandomDeal(curatedCoupon);
-    
+
     let expiresAt: Date;
     if (deal.expiresAt) {
       expiresAt = new Date(deal.expiresAt);
@@ -758,26 +760,26 @@ function generateDealFromKnownLocation(location: KnownLocation, userLat: number,
       storeType: location.type === "store" ? "Store" : "Restaurant",
     };
   }
-  
+
   return null; // Only return deals if we have curated coupons
 }
 
 // Get known locations within the search radius from user's position
 function getKnownLocationsInRadius(userLat: number, userLon: number, radiusMiles: number): KnownLocation[] {
   const locationsInRange: KnownLocation[] = [];
-  
+
   for (const location of KNOWN_LOCATIONS) {
     const distance = calculateDistance(
       { latitude: userLat, longitude: userLon },
       { latitude: location.latitude, longitude: location.longitude }
     );
-    
+
     // Include if within the search radius
     if (distance <= radiusMiles) {
       locationsInRange.push(location);
     }
   }
-  
+
   return locationsInRange;
 }
 
@@ -790,19 +792,19 @@ function isDuplicateLocation(location: KnownLocation, businesses: OverpassBusine
       { latitude: location.latitude, longitude: location.longitude },
       { latitude: biz.latitude, longitude: biz.longitude }
     );
-    
+
     if (distance < 0.1) {
       return true; // Same physical location
     }
-    
+
     // Check name matching (case-insensitive, handles variations)
     const locName = location.name.toLowerCase().replace(/[^a-z0-9]/g, '');
     const bizName = biz.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
+
     if (locName.includes(bizName) || bizName.includes(locName)) {
       return true;
     }
-    
+
     // Handle specific brand variations
     if (locName === "walmartupercenter" && bizName.includes("walmart")) return true;
     if (locName === "walmartupercenter" && bizName.includes("walmart")) return true;
@@ -810,15 +812,15 @@ function isDuplicateLocation(location: KnownLocation, businesses: OverpassBusine
     if (locName.includes("whataburger") && bizName.includes("whata")) return true;
     if (locName.includes("hardee") && bizName.includes("hardee")) return true;
   }
-  
+
   return false;
 }
 
 // Helper function to generate coupon deals for real businesses
 // Checks RapidAPI first, then curated coupons, only returns real verified deals
 async function generateDealFromRealCoupons(
-  business: OverpassBusiness, 
-  userLat: number, 
+  business: OverpassBusiness,
+  userLat: number,
   userLon: number,
   rapidApiCoupons: RapidApiCoupon[]
 ): Promise<any | null> {
@@ -837,7 +839,7 @@ async function generateDealFromRealCoupons(
 
     if (rapidApiCoupon) {
       console.log(`[RapidAPI Match] Business "${business.name}" matched with coupon from "${rapidApiCoupon.store}" - Code: ${rapidApiCoupon.code}`);
-      
+
       // Parse expiration date or default to 30 days
       let expiresAt: Date;
       if (rapidApiCoupon.expirationDate) {
@@ -851,7 +853,7 @@ async function generateDealFromRealCoupons(
       const claimCount = 150 + Math.floor(Math.random() * 350);
 
       // Get logo from clearbit or use provided
-      const logoUrl = rapidApiCoupon.storeLogo || 
+      const logoUrl = rapidApiCoupon.storeLogo ||
         `https://logo.clearbit.com/${matchingBrand.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
 
       // RapidAPI coupons are always considered verified and curated since they come from a live API
@@ -883,11 +885,11 @@ async function generateDealFromRealCoupons(
 
   // STEP 2: Fall back to curated coupons database
   const curatedCoupon = findCuratedCoupon(business.name);
-  
+
   if (curatedCoupon) {
     // Use REAL curated coupon data
     const deal = getRandomDeal(curatedCoupon);
-    
+
     // Parse expiration date or default to 30 days
     let expiresAt: Date;
     if (deal.expiresAt) {
@@ -945,11 +947,11 @@ function generateSampleDeal(business: OverpassBusiness, userLat: number, userLon
 
   // Check if we have a curated real coupon for this business
   const curatedCoupon = findCuratedCoupon(business.name);
-  
+
   if (curatedCoupon) {
     // Use REAL curated coupon data
     const deal = getRandomDeal(curatedCoupon);
-    
+
     // Parse expiration date or default to 30 days
     let expiresAt: Date;
     if (deal.expiresAt) {
@@ -1012,7 +1014,7 @@ function generateLogoUrl(storeName: string, category: string): string {
   };
 
   const lowerName = storeName.toLowerCase();
-  
+
   for (const [key, url] of Object.entries(logoMap)) {
     if (lowerName.includes(key)) {
       return url;

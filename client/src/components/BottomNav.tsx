@@ -1,4 +1,4 @@
-import { Home, Search, Sparkles, Bookmark, MapIcon } from "lucide-react";
+import { Home, Search, Sparkles, Bookmark, MapIcon, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function BottomNav() {
@@ -7,9 +7,10 @@ export default function BottomNav() {
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
     { path: "/browse", icon: Search, label: "Browse" },
+    { path: "/online", icon: Globe, label: "Online" },
     { path: "/ai-picks", icon: Sparkles, label: "AI Picks" },
-    { path: "/saved", icon: Bookmark, label: "Saved" },
     { path: "/map", icon: MapIcon, label: "Map" },
+    { path: "/saved", icon: Bookmark, label: "Saved" },
   ];
 
   return (
@@ -18,7 +19,7 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path;
-          
+
           return (
             <Link
               key={item.path}
@@ -27,15 +28,13 @@ export default function BottomNav() {
               className="flex flex-col items-center justify-center gap-1 px-3 py-2 hover-elevate active-elevate-2 rounded-md transition-colors min-w-[60px]"
             >
               <Icon
-                className={`w-6 h-6 ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
+                className={`w-6 h-6 ${isActive ? "text-primary" : "text-muted-foreground"
+                  }`}
                 strokeWidth={isActive ? 2.5 : 2}
               />
               <span
-                className={`text-xs ${
-                  isActive ? "text-primary font-semibold" : "text-muted-foreground"
-                }`}
+                className={`text-xs ${isActive ? "text-primary font-semibold" : "text-muted-foreground"
+                  }`}
               >
                 {item.label}
               </span>
