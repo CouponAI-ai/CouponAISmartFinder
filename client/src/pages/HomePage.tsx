@@ -14,7 +14,15 @@ import type { Coupon, SavedDeal } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const categories = ["Food & Dining", "Retail", "Health"];
+const categories = [
+  "Food & Dining",
+  "Retail",
+  "Automotive",
+  "Entertainment",
+  "Local Business",
+  "Health",
+  "App Required",
+];
 
 interface GeocodedLocation {
   latitude: number;
@@ -108,6 +116,9 @@ export default function HomePage() {
     .filter(deal => {
       // Category filter
       if (selectedCategory) {
+        if (selectedCategory === "App Required") {
+          return !!(deal as any).requiresApp;
+        }
         return deal.category === selectedCategory;
       }
       return true;
