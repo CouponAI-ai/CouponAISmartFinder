@@ -16,7 +16,11 @@ The frontend is built with React and TypeScript, using Vite for development and 
 
 ### Backend Architecture
 
-The backend is an Express.js application with TypeScript and Node.js, providing a RESTful API. Data is currently stored in-memory (MemStorage) but designed for migration to PostgreSQL using Drizzle ORM. Real-time business data is fetched from OpenStreetMap via the Overpass API, and only verified curated coupon deals from known chains (McDonald's, Walmart, Subway, etc.) are shown. Sample/placeholder deals have been removed - only verified deals with real coupon codes are displayed. Haversine formula is used for accurate distance calculations. Nominatim API handles zip code geocoding. AI-powered recommendations are generated using OpenAI's API.
+The backend is an Express.js application with TypeScript and Node.js, providing a RESTful API. Data is currently stored in-memory (MemStorage) but designed for migration to PostgreSQL using Drizzle ORM. Real-time business data is fetched from OpenStreetMap via the Overpass API, and only verified curated coupon deals from known chains (McDonald's, Walmart, Subway, AutoZone, AMC Theatres, etc.) are shown. Sample/placeholder deals have been removed - only verified deals with real coupon codes are displayed. Haversine formula is used for accurate distance calculations. Nominatim API handles zip code geocoding. AI-powered recommendations are generated using OpenAI's API.
+
+### Browse Categories
+
+The Browse page supports filtering by these categories: Food & Dining, Retail, Automotive, Entertainment, Local Business, Health, Groceries, Fashion, Electronics, Travel, Beauty, Fitness, and App Required. "App Required" is a special cross-cutting filter that surfaces any deal where the app must be used to redeem it, regardless of the deal's category. The filter panel scrolls with the Apply Filters button pinned at the bottom.
 
 ### Data Models
 

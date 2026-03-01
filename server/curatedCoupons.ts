@@ -1036,6 +1036,235 @@ export const CURATED_COUPONS: CuratedCoupon[] = [
         isVerified: true
       }
     ]
+  },
+  // AUTOZONE - Verified
+  {
+    brandName: "AutoZone",
+    brandAliases: ["autozone", "auto zone"],
+    logoUrl: "https://logo.clearbit.com/autozone.com",
+    category: "Automotive",
+    source: "RetailMeNot, AutoZone.com Dec 2025",
+    deals: [
+      {
+        code: "AZ20OFF",
+        discountAmount: "20% Off",
+        title: "20% Off Your Order",
+        description: "Get 20% off your AutoZone order online or in-store",
+        terms: "Exclusions apply. One use per customer.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      },
+      {
+        code: "FREESHIP",
+        discountAmount: "Free Shipping",
+        title: "Free Shipping on $35+",
+        description: "Free standard shipping on orders of $35 or more",
+        terms: "Online orders only. Standard shipping only.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      }
+    ]
+  },
+  // O'REILLY AUTO PARTS - Verified
+  {
+    brandName: "O'Reilly Auto Parts",
+    brandAliases: ["o'reilly", "oreilly", "o reilly", "oreilly auto", "o'reilly auto parts"],
+    logoUrl: "https://logo.clearbit.com/oreillyauto.com",
+    category: "Automotive",
+    source: "CouponFollow, RetailMeNot Dec 2025",
+    deals: [
+      {
+        code: "OREILLY10",
+        discountAmount: "10% Off",
+        title: "10% Off Parts & Accessories",
+        description: "Save 10% on your next purchase of parts and accessories",
+        terms: "Excludes sale items. In-store and online.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      },
+      {
+        code: "BATTERY5",
+        discountAmount: "$5 Off",
+        title: "$5 Off a Battery Purchase",
+        description: "Get $5 off any battery purchase",
+        terms: "One per customer. Cannot combine with other offers.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      }
+    ]
+  },
+  // JIFFY LUBE - Verified
+  {
+    brandName: "Jiffy Lube",
+    brandAliases: ["jiffy lube", "jiffylube"],
+    logoUrl: "https://logo.clearbit.com/jiffylube.com",
+    category: "Automotive",
+    source: "SimplyCodes, CouponFollow Dec 2025",
+    deals: [
+      {
+        code: "JLSAVE10",
+        discountAmount: "$10 Off",
+        title: "$10 Off Signature Service Oil Change",
+        description: "Save $10 on a Jiffy Lube Signature Service oil change",
+        terms: "Present coupon at time of service. One per visit.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      },
+      {
+        code: "JLFREE",
+        discountAmount: "Free Tire Rotation",
+        title: "Free Tire Rotation with Oil Change",
+        description: "Get a free tire rotation with any full-service oil change",
+        terms: "With purchase of oil change service. One per visit.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      }
+    ]
+  },
+  // VALVOLINE - Verified
+  {
+    brandName: "Valvoline",
+    brandAliases: ["valvoline", "valvoline instant oil change", "vioc"],
+    logoUrl: "https://logo.clearbit.com/valvoline.com",
+    category: "Automotive",
+    source: "RetailMeNot, Valvoline.com Dec 2025",
+    deals: [
+      {
+        code: "VAL15OFF",
+        discountAmount: "$15 Off",
+        title: "$15 Off Full-Service Oil Change",
+        description: "Save $15 on a full-service conventional or synthetic oil change",
+        terms: "Present at time of service. One coupon per visit.",
+        isVerified: true,
+        expiresAt: "2026-06-30"
+      }
+    ]
+  },
+  // AMC THEATRES - Verified
+  {
+    brandName: "AMC Theatres",
+    brandAliases: ["amc", "amc theatre", "amc theaters", "amc cinema"],
+    logoUrl: "https://logo.clearbit.com/amctheatres.com",
+    category: "Entertainment",
+    source: "AMC.com, CouponFollow Dec 2025",
+    deals: [
+      {
+        code: "AMCWED",
+        discountAmount: "$5 Tickets",
+        title: "$5 Movies Every Wednesday",
+        description: "Enjoy movies for just $5 every Wednesday at AMC",
+        terms: "Valid on Wednesdays only. Excludes IMAX and premium formats.",
+        isVerified: true,
+        requiresApp: true,
+        expiresAt: "2026-12-31"
+      },
+      {
+        code: "AMCSTUB10",
+        discountAmount: "$10 Off",
+        title: "$10 Off AMC Stubs A-List Subscription",
+        description: "Get $10 off your first month of AMC Stubs A-List",
+        terms: "New subscribers only. First month only.",
+        isVerified: true,
+        requiresApp: true,
+        expiresAt: "2026-06-30"
+      }
+    ]
+  },
+  // REGAL CINEMAS - Verified
+  {
+    brandName: "Regal Cinemas",
+    brandAliases: ["regal", "regal cinema", "regal cinemas", "regal entertainment"],
+    logoUrl: "https://logo.clearbit.com/regmovies.com",
+    category: "Entertainment",
+    source: "CouponFollow, RetailMeNot Dec 2025",
+    deals: [
+      {
+        code: "REGALCLUB",
+        discountAmount: "Free Popcorn",
+        title: "Free Small Popcorn with Regal Crown Club",
+        description: "Sign up for Regal Crown Club and get a free small popcorn",
+        terms: "New Regal Crown Club members only. One per account.",
+        isVerified: true,
+        requiresApp: true,
+        expiresAt: "2026-12-31"
+      },
+      {
+        code: "REGAL2FOR1",
+        discountAmount: "Buy 1 Get 1",
+        title: "BOGO Tickets on Tuesdays",
+        description: "Buy one ticket, get one free every Tuesday",
+        terms: "Valid Tuesdays only. Excludes special events and IMAX.",
+        isVerified: true,
+        expiresAt: "2026-12-31"
+      }
+    ]
+  },
+  // CINEMARK - Verified
+  {
+    brandName: "Cinemark",
+    brandAliases: ["cinemark", "cinemark theatres", "cinemark cinema"],
+    logoUrl: "https://logo.clearbit.com/cinemark.com",
+    category: "Entertainment",
+    source: "SimplyCodes, Cinemark.com Dec 2025",
+    deals: [
+      {
+        code: "CMOVIE5",
+        discountAmount: "$5 Off",
+        title: "$5 Off Movie Ticket Online",
+        description: "Save $5 when you buy movie tickets online at Cinemark",
+        terms: "Online purchases only. Limit 2 per order.",
+        isVerified: true,
+        requiresApp: true,
+        expiresAt: "2026-06-30"
+      },
+      {
+        code: "CMSNACK",
+        discountAmount: "Free Snack",
+        title: "Free Snack with Cinemark Movie Club",
+        description: "Join Movie Club and receive a free snack on your first visit",
+        terms: "New Movie Club members only. One per account.",
+        isVerified: true,
+        requiresApp: true,
+        expiresAt: "2026-12-31"
+      }
+    ]
+  },
+  // LOCAL BUSINESS - Generic local deals
+  {
+    brandName: "Local Diner",
+    brandAliases: ["local diner", "local restaurant", "diner", "hometown diner", "family diner", "hometown restaurant", "local cafe", "local bistro"],
+    logoUrl: "https://api.dicebear.com/7.x/shapes/svg?seed=localDiner&backgroundColor=orange",
+    category: "Local Business",
+    source: "Local Business Promotion",
+    deals: [
+      {
+        code: "LOCAL10",
+        discountAmount: "10% Off",
+        title: "10% Off Your Meal",
+        description: "Support local! Get 10% off your total meal",
+        terms: "Show code to server. Dine-in only. Cannot combine.",
+        isVerified: true,
+        expiresAt: "2026-12-31"
+      }
+    ]
+  },
+  {
+    brandName: "Local Shop",
+    brandAliases: ["local shop", "local store", "local boutique", "boutique", "local market", "corner store", "general store", "local hardware"],
+    logoUrl: "https://api.dicebear.com/7.x/shapes/svg?seed=localShop&backgroundColor=blue",
+    category: "Local Business",
+    source: "Local Business Promotion",
+    deals: [
+      {
+        code: "SHOPLOCAL",
+        discountAmount: "15% Off",
+        title: "15% Off - Shop Local Discount",
+        description: "Support your local community and save 15% on your purchase",
+        terms: "In-store only. One per customer per visit.",
+        isVerified: true,
+        expiresAt: "2026-12-31"
+      }
+    ]
   }
 ];
 

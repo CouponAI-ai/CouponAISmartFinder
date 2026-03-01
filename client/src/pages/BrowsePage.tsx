@@ -20,7 +20,21 @@ import type { Coupon, SavedDeal } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const allCategories = ["Groceries", "Fashion", "Electronics", "Dining", "Travel", "Health", "Beauty", "Fitness"];
+const allCategories = [
+  "Food & Dining",
+  "Retail",
+  "Automotive",
+  "Entertainment",
+  "Local Business",
+  "Health",
+  "Groceries",
+  "Fashion",
+  "Electronics",
+  "Travel",
+  "Beauty",
+  "Fitness",
+  "App Required",
+];
 const sortOptions = ["Nearest", "Highest Discount", "Most Popular", "Expiring Soon"];
 
 interface GeocodedLocation {
@@ -89,7 +103,15 @@ export default function BrowsePage() {
     .filter((deal) => {
       // Category filter
       if (selectedCategories.length > 0) {
-        return selectedCategories.includes(deal.category);
+        // "App Required" matches deals where requiresApp is true
+        if (selectedCategories.includes("App Required") && (deal as any).requiresApp) {
+          return true;
+        }
+        const nonAppCategories = selectedCategories.filter(c => c !== "App Required");
+        if (nonAppCategories.length > 0) {
+          return nonAppCategories.includes(deal.category);
+        }
+        return false;
       }
       return true;
     })
@@ -239,12 +261,12 @@ export default function BrowsePage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="flex flex-col">
                 <SheetHeader>
                   <SheetTitle>Filters</SheetTitle>
                 </SheetHeader>
-                
-                <div className="mt-6 space-y-6">
+
+                <div className="flex-1 overflow-y-auto mt-6 space-y-6 pr-1">
                   {/* Category Filter */}
                   <div>
                     <h3 className="text-sm font-semibold mb-3">Categories</h3>
@@ -284,7 +306,9 @@ export default function BrowsePage() {
                     </div>
                   </div>
 
-                  {/* Apply Button */}
+                </div>
+
+                <div className="pt-4 border-t mt-2">
                   <Button
                     data-testid="button-apply-filters"
                     onClick={() => setFilterOpen(false)}
