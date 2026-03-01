@@ -114,6 +114,12 @@ export default function SavedPage() {
                   Verified
                 </Badge>
               )}
+              {(deal as any).isLocalBusiness && (
+                <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-indigo-600 border-indigo-300 dark:text-indigo-400 dark:border-indigo-700">
+                  <MapPin className="w-3 h-3" />
+                  Local
+                </Badge>
+              )}
               {expired && (
                 <Badge variant="destructive" className="text-xs px-1.5 py-0 h-5">
                   Expired

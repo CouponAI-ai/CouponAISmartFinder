@@ -71,19 +71,37 @@ export async function fetchNearbyBusinesses(
     return cachedEntry.data;
   }
 
-  // Build Overpass QL query for main business types only
+  // Build Overpass QL query for all business types including local businesses
   const query = `
-    [out:json][timeout:25];
+    [out:json][timeout:30];
     (
       node["amenity"="restaurant"](around:${radiusMeters},${latitude},${longitude});
       node["amenity"="cafe"](around:${radiusMeters},${latitude},${longitude});
       node["amenity"="fast_food"](around:${radiusMeters},${latitude},${longitude});
+      node["amenity"="bar"](around:${radiusMeters},${latitude},${longitude});
+      node["amenity"="ice_cream"](around:${radiusMeters},${latitude},${longitude});
       node["shop"="supermarket"](around:${radiusMeters},${latitude},${longitude});
       node["shop"="convenience"](around:${radiusMeters},${latitude},${longitude});
       node["shop"="department_store"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="bakery"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="butcher"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="florist"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="hardware"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="clothes"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="shoes"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="books"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="beauty"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="hairdresser"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="gift"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="jewelry"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="pet"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="furniture"](around:${radiusMeters},${latitude},${longitude});
+      node["shop"="sports"](around:${radiusMeters},${latitude},${longitude});
       node["amenity"="pharmacy"](around:${radiusMeters},${latitude},${longitude});
+      node["amenity"="laundry"](around:${radiusMeters},${latitude},${longitude});
+      node["amenity"="dry_cleaning"](around:${radiusMeters},${latitude},${longitude});
     );
-    out body 50;
+    out body 100;
   `;
 
   // Try each server with retry logic
@@ -217,15 +235,31 @@ export function mapBusinessTypeToCategory(type: string): string {
     cafe: "Food & Dining",
     fast_food: "Food & Dining",
     bakery: "Food & Dining",
-    supermarket: "Grocery",
-    convenience: "Grocery",
-    clothes: "Retail",
+    bar: "Food & Dining",
+    ice_cream: "Food & Dining",
+    butcher: "Food & Dining",
+    supermarket: "Groceries",
+    convenience: "Groceries",
+    clothes: "Fashion",
+    shoes: "Fashion",
     electronics: "Electronics",
     pharmacy: "Health",
+    beauty: "Beauty",
+    hairdresser: "Beauty",
     department_store: "Retail",
+    hardware: "Local Business",
+    florist: "Local Business",
+    books: "Local Business",
+    gift: "Local Business",
+    jewelry: "Local Business",
+    pet: "Local Business",
+    furniture: "Local Business",
+    sports: "Local Business",
+    laundry: "Local Business",
+    dry_cleaning: "Local Business",
   };
 
-  return categoryMap[type] || "Retail";
+  return categoryMap[type] || "Local Business";
 }
 
 /**

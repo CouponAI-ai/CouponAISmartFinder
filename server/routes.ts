@@ -112,17 +112,24 @@ export function registerRoutes(app: Express) {
       }
 
       const verifiedDeals: any[] = [];
+      const localBusinessDeals: any[] = [];
 
       for (const business of businesses) {
         // Try to get deal from RapidAPI or curated coupons
         const deal = await generateDealFromRealCoupons(business, userLat, userLon, rapidApiCoupons);
-        // Only include deals that have real verified coupons
         if (deal && deal.isCurated && deal.isVerified) {
           verifiedDeals.push(deal);
+        } else if (!deal) {
+          // No curated coupon matched — surface as a local business deal
+          const localDeal = generateLocalBusinessDeal(business, userLat, userLon);
+          if (localDeal) {
+            localBusinessDeals.push(localDeal);
+          }
         }
       }
 
       console.log(`Found ${verifiedDeals.length} verified deals from OpenStreetMap businesses`);
+      console.log(`Found ${localBusinessDeals.length} local business deals`);
 
       // Get known locations for the target ZIP code only
       let knownLocationDeals: any[] = [];
@@ -149,8 +156,8 @@ export function registerRoutes(app: Express) {
         }
       }
 
-      // Merge verified OpenStreetMap deals with known location deals (all verified)
-      const allDeals = [...verifiedDeals, ...knownLocationDeals];
+      // Merge all deal types: verified chain deals, known locations, and local businesses
+      const allDeals = [...verifiedDeals, ...knownLocationDeals, ...localBusinessDeals];
 
       // Sort by distance (nearest first)
       const sortedCoupons = allDeals.sort((a, b) => a.distance - b.distance);
@@ -931,11 +938,75 @@ async function generateDealFromRealCoupons(
 }
 
 function getStoreType(businessType: string): string {
-  const storeTypes = ["supermarket", "convenience", "department_store", "electronics", "clothes", "pharmacy", "store"];
-  if (storeTypes.some(t => businessType.toLowerCase().includes(t))) {
-    return "Store";
+  const restaurantTypes = ["restaurant", "cafe", "fast_food", "bar", "ice_cream", "bakery", "butcher"];
+  if (restaurantTypes.some(t => businessType.toLowerCase().includes(t))) {
+    return "Restaurant";
   }
-  return "Restaurant";
+  return "Store";
+}
+
+// Local business promos rotated by business ID for variety
+const LOCAL_BUSINESS_PROMOS = [
+  { code: "LOCALFIRST", discountAmount: "10% Off", title: "10% Off - Support Local", description: "Show this deal in-store for 10% off your purchase. Support your local community!" },
+  { code: "COMMUNITY5", discountAmount: "$5 Off", title: "$5 Off $25+", description: "Get $5 off when you spend $25 or more. Mention CouponAI at checkout." },
+  { code: "SHOPLOCAL15", discountAmount: "15% Off", title: "15% Off For Local Shoppers", description: "Enjoy 15% off your next visit. Show this deal at the register." },
+  { code: "LOCALVISIT", discountAmount: "Free Gift", title: "Free Gift with Purchase", description: "Receive a free gift with any purchase. Show this deal in-store." },
+  { code: "NEIGHBORDEAL", discountAmount: "Buy 1 Get 1 50% Off", title: "BOGO 50% Off", description: "Buy one item, get the second at 50% off. Mention CouponAI." },
+];
+
+// Generate a "Local Business" deal for businesses with no curated coupon
+function generateLocalBusinessDeal(
+  business: OverpassBusiness,
+  userLat: number,
+  userLon: number
+): any {
+  // Skip businesses that are clearly part of known chains (they should have curated coupons)
+  const knownChainKeywords = ["mcdonald", "subway", "walmart", "target", "kroger", "domino", "pizza hut", "taco bell", "burger king", "starbucks", "chick-fil", "sonic", "wendy", "arby", "kfc", "popeyes", "dunkin", "panda express", "whataburger", "jimmy john", "dollar general", "dollar tree", "autozone", "o'reilly", "jiffy lube", "valvoline", "amc", "regal", "cinemark"];
+  const nameLower = business.name.toLowerCase();
+  if (knownChainKeywords.some(kw => nameLower.includes(kw))) {
+    return null;
+  }
+
+  const distance = calculateDistance(
+    { latitude: userLat, longitude: userLon },
+    { latitude: business.latitude, longitude: business.longitude }
+  );
+
+  // Pick a promo deterministically based on business ID for consistency
+  const promo = LOCAL_BUSINESS_PROMOS[business.id % LOCAL_BUSINESS_PROMOS.length];
+
+  // Use initials avatar with brand color
+  const logoUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(business.name)}&backgroundColor=6366f1&fontColor=ffffff&fontSize=40`;
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 60);
+
+  const category = mapBusinessTypeToCategory(business.type);
+
+  return {
+    id: `local-${business.id}`,
+    storeName: business.name,
+    storeLogoUrl: logoUrl,
+    discountAmount: promo.discountAmount,
+    title: promo.title,
+    description: promo.description,
+    code: promo.code,
+    category,
+    expiresAt: expiresAt.toISOString(),
+    claimCount: 10 + Math.floor(Math.random() * 80),
+    trending: false,
+    terms: "Present deal in-store. One per visit. Cannot combine with other offers.",
+    latitude: business.latitude,
+    longitude: business.longitude,
+    distance,
+    isVerified: false,
+    isCurated: false,
+    isLocalBusiness: true,
+    requiresApp: false,
+    source: "Local Business",
+    address: business.address,
+    storeType: getStoreType(business.type),
+  };
 }
 
 // Legacy function for backwards compatibility (still used in some places)

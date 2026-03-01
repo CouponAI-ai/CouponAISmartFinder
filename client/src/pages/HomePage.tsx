@@ -505,6 +505,12 @@ export default function HomePage() {
                             Verified
                           </Badge>
                         )}
+                        {(deal as any).isLocalBusiness && (
+                          <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-indigo-600 border-indigo-300 dark:text-indigo-400 dark:border-indigo-700">
+                            <MapPin className="w-3 h-3" />
+                            Local
+                          </Badge>
+                        )}
                       </div>
                       <h4 className="text-2xl font-bold text-primary mb-1">
                         {deal.discountAmount}
