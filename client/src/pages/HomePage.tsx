@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck, Smartphone, AlertCircle, Heart, Store, UtensilsCrossed } from "lucide-react";
+import {
+  Search, Sparkles, SlidersHorizontal, Loader2, MapPin, Star, BadgeCheck,
+  Smartphone, AlertCircle, Heart, Store, UtensilsCrossed, Tag, Car, Film,
+  ShoppingBag, Activity, ShoppingCart, Shirt, Cpu, Plane, Scissors, Dumbbell
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +28,22 @@ const categories = [
   "App Required",
 ];
 
+const categoryIcons: Record<string, React.ElementType> = {
+  "Food & Dining": UtensilsCrossed,
+  "Retail": ShoppingBag,
+  "Automotive": Car,
+  "Entertainment": Film,
+  "Local Business": Store,
+  "Health": Activity,
+  "Groceries": ShoppingCart,
+  "Fashion": Shirt,
+  "Electronics": Cpu,
+  "Travel": Plane,
+  "Beauty": Scissors,
+  "Fitness": Dumbbell,
+  "App Required": Smartphone,
+};
+
 interface GeocodedLocation {
   latitude: number;
   longitude: number;
@@ -41,22 +61,18 @@ export default function HomePage() {
   const [selectedDeal, setSelectedDeal] = useState<Coupon | null>(null);
   const { toast } = useToast();
 
-  // ZIP code search state
   const [zipCode, setZipCode] = useState("");
   const [searchedZip, setSearchedZip] = useState("");
   const [geoLocation, setGeoLocation] = useState<GeocodedLocation | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  // Hydrate state from localStorage on mount
   useEffect(() => {
     const savedZip = localStorage.getItem('couponai_zip');
     const savedLocationStr = localStorage.getItem('couponai_location');
-    
     if (savedZip) {
       setZipCode(savedZip);
       setSearchedZip(savedZip);
     }
-    
     if (savedLocationStr) {
       try {
         const savedLocation = JSON.parse(savedLocationStr);
@@ -71,7 +87,6 @@ export default function HomePage() {
     queryKey: ["/api/saved-deals"],
   });
 
-  // Nearby deals from Overpass API
   const nearbyDealsQuery = useQuery<(Coupon & { distance: number })[]>({
     queryKey: geoLocation && searchedZip
       ? [`/api/coupons/nearby?latitude=${geoLocation.latitude}&longitude=${geoLocation.longitude}&radius=10&zipCode=${encodeURIComponent(searchedZip)}`]
@@ -79,7 +94,6 @@ export default function HomePage() {
     enabled: !!geoLocation && !!searchedZip,
   });
 
-  // Recommended spot (verified deals only)
   const recommendedSpotQuery = useQuery<{
     recommended: (Coupon & { distance: number }) | null;
     score: number;
@@ -95,13 +109,10 @@ export default function HomePage() {
 
   const nearbyDeals = nearbyDealsQuery.data || [];
   const recommendedSpot = recommendedSpotQuery.data?.recommended;
-
   const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
-  // Filter nearby deals by search query and selected category
   const searchAndCategoryFilteredDeals = nearbyDeals
     .filter(deal => {
-      // Search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         return (
@@ -114,40 +125,30 @@ export default function HomePage() {
       return true;
     })
     .filter(deal => {
-      // Category filter
       if (selectedCategory) {
-        if (selectedCategory === "App Required") {
-          return !!(deal as any).requiresApp;
-        }
+        if (selectedCategory === "App Required") return !!(deal as any).requiresApp;
         return deal.category === selectedCategory;
       }
       return true;
     });
 
-  // Deduplicate deals - only show each unique coupon code once per brand
   const filteredDeals = searchAndCategoryFilteredDeals.filter((deal, index, array) => {
     const dealCode = (deal as any).code || '';
     const brandName = deal.storeName.toLowerCase();
-    
-    // Find if this code+brand combination appeared earlier
     const firstIndex = array.findIndex(d => {
       const dCode = (d as any).code || '';
       const dBrand = d.storeName.toLowerCase();
       return dCode === dealCode && dBrand === brandName;
     });
-    
-    // Only keep if this is the first occurrence
     return firstIndex === index;
   });
 
   const handleSave = async (deal: any) => {
     const isSaved = savedDealIds.has(deal.id);
-    
     try {
       if (isSaved) {
         await apiRequest("DELETE", `/api/saved-deals/${deal.id}`, undefined);
       } else {
-        // Save full deal data
         await apiRequest("POST", "/api/saved-deals", {
           couponId: deal.id,
           storeName: deal.storeName,
@@ -171,72 +172,42 @@ export default function HomePage() {
           storeType: deal.storeType,
         });
       }
-      
       await queryClient.invalidateQueries({ queryKey: ["/api/saved-deals"] });
-      
       toast({
         title: isSaved ? "Deal removed" : "Deal saved!",
         description: isSaved ? "Removed from your saved deals" : "Added to your saved deals",
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update saved deals",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to update saved deals", variant: "destructive" });
     }
   };
 
   const handleZipSearch = async () => {
     if (!zipCode.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a ZIP code",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please enter a ZIP code", variant: "destructive" });
       return;
     }
-
     setIsGeocoding(true);
     try {
-      // Fetch geocode data directly with fetch to ensure HTTP request is made
       const response = await fetch(`/api/geocode/zipcode?zipcode=${encodeURIComponent(zipCode)}`, {
         credentials: "include",
       });
-      
-      if (!response.ok) {
-        throw { status: response.status, message: `${response.status}` };
-      }
-      
+      if (!response.ok) throw { status: response.status, message: `${response.status}` };
       const data: GeocodedLocation = await response.json();
-      
-      // Save to localStorage for use across pages
       localStorage.setItem('couponai_zip', zipCode);
       localStorage.setItem('couponai_location', JSON.stringify(data));
-      
-      // Update state - these trigger the useQuery hooks
       setSearchedZip(zipCode);
       setGeoLocation(data);
-      
       toast({
         title: "Location found!",
         description: `Showing deals near ${data.city || data.displayName}`,
       });
     } catch (error: any) {
       console.error("Geocoding error:", error);
-      
       if (error?.message?.includes("404") || error?.status === 404) {
-        toast({
-          title: "ZIP code not found",
-          description: "Please check the ZIP code and try again",
-          variant: "destructive",
-        });
+        toast({ title: "ZIP code not found", description: "Please check the ZIP code and try again", variant: "destructive" });
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to find location. Please try again.",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Failed to find location. Please try again.", variant: "destructive" });
       }
     } finally {
       setIsGeocoding(false);
@@ -244,100 +215,96 @@ export default function HomePage() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleZipSearch();
-    }
+    if (e.key === "Enter") handleZipSearch();
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-          <h1 className="text-xl font-bold">CouponAI</h1>
-          <div className="flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+      {/* Sticky header */}
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm px-4 py-3">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-xl font-extrabold text-primary tracking-tight">CouponAI</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-accent mb-2" />
+          </div>
+          <div className="flex-1 max-w-xs relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               data-testid="input-search-header"
               type="search"
-              placeholder="Search for deals..."
+              placeholder="Search deals..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 rounded-lg bg-muted/50"
+              className="pl-9 h-9 rounded-full bg-secondary border-0 text-sm"
             />
           </div>
           <ThemeToggle />
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="bg-background px-4 pt-12 pb-8">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">
-            Smart Savings, Powered by AI
-          </h2>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Discover personalized deals from your favorite stores
+      {/* Hero section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-accent px-4 pt-10 pb-12">
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: "radial-gradient(circle at 70% 50%, white 0%, transparent 60%)" }} />
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <p className="text-accent-foreground/80 text-sm font-semibold uppercase tracking-widest mb-3"
+            style={{ color: 'rgba(255,255,255,0.7)' }}>
+            AI-Powered Savings
           </p>
-        </div>
-      </div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3 font-display leading-tight">
+            Discover Local Deals<br />Near You
+          </h1>
+          <p className="text-white/70 text-sm md:text-base mb-8 max-w-sm mx-auto">
+            Real coupons from real businesses in your ZIP code — verified and ready to use
+          </p>
 
-      {/* ZIP Code Search Section */}
-      <div className="px-4 py-6 border-b border-border bg-muted/30">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Find Local Deals</h3>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Enter your ZIP code to discover deals from real businesses near you
-          </p>
-          
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                data-testid="input-home-zipcode"
-                type="text"
-                placeholder="Enter ZIP code (e.g., 71753)"
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-10"
+          {/* ZIP search bar */}
+          <div className="max-w-md mx-auto">
+            <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-full p-1.5 border border-white/20">
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 w-4 h-4" />
+                <input
+                  data-testid="input-home-zipcode"
+                  type="text"
+                  placeholder="Enter ZIP code (e.g., 71753)"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isGeocoding}
+                  className="w-full bg-transparent pl-9 pr-3 py-2 text-white placeholder-white/50 text-sm font-medium focus:outline-none"
+                />
+              </div>
+              <Button
+                data-testid="button-home-search-zip"
+                onClick={handleZipSearch}
                 disabled={isGeocoding}
-              />
+                className="rounded-full bg-white text-primary hover:bg-white font-semibold px-5 flex-shrink-0"
+                size="sm"
+              >
+                {isGeocoding ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Search"
+                )}
+              </Button>
             </div>
-            <Button
-              data-testid="button-home-search-zip"
-              onClick={handleZipSearch}
-              disabled={isGeocoding}
-            >
-              {isGeocoding ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                "Search"
-              )}
-            </Button>
+            {geoLocation && (
+              <p className="text-white/60 text-xs mt-2">
+                Showing deals in {searchedZip} · {geoLocation.city || "your area"}
+              </p>
+            )}
           </div>
-
-          {geoLocation && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Showing deals in ZIP code {searchedZip} ({geoLocation.city || "your area"})
-            </p>
-          )}
         </div>
       </div>
 
       {/* Local Deals Results */}
       {geoLocation && searchedZip && (
-        <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          {/* Section header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold">Deals Near You</h2>
+              <Sparkles className="w-5 h-5 text-accent" />
+              <h2 className="text-lg font-bold">Deals Near You</h2>
             </div>
             <Badge variant="secondary">
               {nearbyDealsQuery.isLoading ? (
@@ -351,28 +318,32 @@ export default function HomePage() {
             </Badge>
           </div>
 
-          {/* Category Filter for Local Deals */}
-          <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide mb-4">
-            <Button
-              variant={selectedCategory === null ? "default" : "secondary"}
-              size="sm"
-              className="rounded-full whitespace-nowrap"
+          {/* Category filter pills */}
+          <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
+            <button
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${
+                selectedCategory === null
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              }`}
               onClick={() => setSelectedCategory(null)}
               data-testid="button-category-all"
             >
               All
-            </Button>
+            </button>
             {categories.map((category) => (
-              <Button
+              <button
                 key={category}
                 data-testid={`button-local-category-${category.toLowerCase()}`}
-                variant={selectedCategory === category ? "default" : "secondary"}
-                size="sm"
-                className="rounded-full whitespace-nowrap"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${
+                  selectedCategory === category
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
                 onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
               >
                 {category}
-              </Button>
+              </button>
             ))}
           </div>
 
@@ -386,8 +357,8 @@ export default function HomePage() {
             </Card>
           )}
           {recommendedSpot && recommendedSpotQuery.data && !recommendedSpotQuery.isLoading && (
-            <Card 
-              className="p-4 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/30 cursor-pointer hover-elevate mb-4"
+            <Card
+              className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 cursor-pointer hover-elevate mb-4"
               onClick={() => setSelectedDeal(recommendedSpot)}
               data-testid="card-home-recommended-spot"
             >
@@ -405,41 +376,24 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {recommendedSpot.storeLogoUrl && (
-                      <img
-                        src={recommendedSpot.storeLogoUrl}
-                        alt={recommendedSpot.storeName}
-                        className="w-6 h-6 object-contain rounded"
-                      />
+                      <img src={recommendedSpot.storeLogoUrl} alt={recommendedSpot.storeName} className="w-6 h-6 object-contain rounded" />
                     )}
                     <p className="font-bold text-base">{recommendedSpot.storeName}</p>
-                    {(recommendedSpot as any).storeType && (
-                      <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
-                        {(recommendedSpot as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
-                        {(recommendedSpot as any).storeType}
-                      </Badge>
-                    )}
                     {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
-                      <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
+                      <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-emerald-600">
                         <BadgeCheck className="w-3 h-3" />
                         Verified
                       </Badge>
                     )}
                   </div>
-                  <h4 className="text-3xl font-bold text-primary mb-2">
-                    {recommendedSpot.discountAmount}
-                  </h4>
-                  <p className="text-sm mb-2">{recommendedSpot.title}</p>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {recommendedSpotQuery.data.reason}
-                  </p>
+                  <h4 className="text-3xl font-bold text-primary mb-1">{recommendedSpot.discountAmount}</h4>
+                  <p className="text-sm mb-1">{recommendedSpot.title}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{recommendedSpotQuery.data.reason}</p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-xs text-muted-foreground">
-                      {recommendedSpot.distance.toFixed(1)} miles away
-                    </p>
+                    <p className="text-xs text-muted-foreground">{recommendedSpot.distance.toFixed(1)} miles away</p>
                     {(recommendedSpot as any).requiresApp && (
                       <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
-                        <Smartphone className="w-3 h-3" />
-                        App Required
+                        <Smartphone className="w-3 h-3" /> App Required
                       </span>
                     )}
                   </div>
@@ -448,153 +402,119 @@ export default function HomePage() {
             </Card>
           )}
 
-          {/* Deals Loading State */}
+          {/* Loading skeleton */}
           {nearbyDealsQuery.isLoading && (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-48 bg-muted rounded-xl animate-pulse"
-                />
+                <div key={i} className="h-52 bg-muted rounded-xl animate-pulse" />
               ))}
             </div>
           )}
 
-          {/* Deals List */}
+          {/* Empty state */}
           {!nearbyDealsQuery.isLoading && filteredDeals.length === 0 && (
-            <Card className="p-8 text-center">
-              <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-              <h4 className="font-semibold mb-2">No Deals Found</h4>
-              <p className="text-sm text-muted-foreground">
-                {selectedCategory 
+            <Card className="p-10 text-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-muted-foreground animate-pulse-soft" />
+              </div>
+              <h4 className="font-bold text-base mb-2">No Deals Found</h4>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                {selectedCategory
                   ? `No ${selectedCategory} deals in this area. Try a different category.`
                   : "We couldn't find any deals in this area. Try a different ZIP code!"}
               </p>
+              {selectedCategory && (
+                <button
+                  className="mt-4 text-sm text-primary font-semibold"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Clear filter
+                </button>
+              )}
             </Card>
           )}
 
+          {/* Deals list */}
           {!nearbyDealsQuery.isLoading && filteredDeals.length > 0 && (
             <div className="space-y-4">
-              {filteredDeals.map((deal) => (
-                <Card
-                  key={deal.id}
-                  className="p-4 cursor-pointer hover-elevate"
-                  onClick={() => setSelectedDeal(deal)}
-                  data-testid={`card-home-deal-${deal.id}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        {deal.storeLogoUrl && (
-                          <img
-                            src={deal.storeLogoUrl}
-                            alt={deal.storeName}
-                            className="w-6 h-6 object-contain rounded"
-                          />
-                        )}
-                        <p className="font-semibold text-sm">{deal.storeName}</p>
-                        {(deal as any).storeType && (
-                          <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
-                            {(deal as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
-                            {(deal as any).storeType}
-                          </Badge>
-                        )}
-                        {(deal as any).isCurated && (deal as any).isVerified && (
-                          <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
-                            <BadgeCheck className="w-3 h-3" />
-                            Verified
-                          </Badge>
-                        )}
-                        {(deal as any).isLocalBusiness && (
-                          <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-indigo-600 border-indigo-300 dark:text-indigo-400 dark:border-indigo-700">
-                            <MapPin className="w-3 h-3" />
-                            Local
-                          </Badge>
-                        )}
-                      </div>
-                      <h4 className="text-2xl font-bold text-primary mb-1">
-                        {deal.discountAmount}
-                      </h4>
-                      <p className="text-sm mb-2">{deal.title}</p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs">
-                          {deal.category}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground">
-                          {deal.distance.toFixed(1)} miles away
-                        </p>
-                        {(deal as any).requiresApp && (
-                          <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
-                            <Smartphone className="w-3 h-3" />
-                            App Required
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      data-testid={`button-save-${deal.id}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSave(deal);
-                      }}
-                      className="p-2 rounded-full hover-elevate active-elevate-2 flex-shrink-0"
-                    >
-                      <Heart
-                        className={`w-5 h-5 ${
-                          savedDealIds.has(deal.id) ? "fill-primary text-primary" : "text-muted-foreground"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </Card>
+              {filteredDeals.map((deal, i) => (
+                <div key={deal.id} style={{ animationDelay: `${i * 50}ms` }}>
+                  <DealCard
+                    id={deal.id}
+                    storeName={deal.storeName}
+                    storeLogoUrl={deal.storeLogoUrl ?? undefined}
+                    discountAmount={deal.discountAmount}
+                    title={deal.title}
+                    description={deal.description ?? undefined}
+                    category={deal.category}
+                    expirationDate={deal.expirationDate}
+                    claimCount={deal.claimCount ?? 0}
+                    isTrending={deal.isTrending ?? false}
+                    isSaved={savedDealIds.has(deal.id)}
+                    isCurated={(deal as any).isCurated}
+                    isVerified={(deal as any).isVerified}
+                    isLocalBusiness={(deal as any).isLocalBusiness}
+                    requiresApp={(deal as any).requiresApp}
+                    code={(deal as any).code}
+                    distance={deal.distance}
+                    onSave={() => handleSave(deal)}
+                    onViewDeal={() => setSelectedDeal(deal)}
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
       )}
 
-      {/* Initial State - No ZIP entered yet */}
+      {/* Initial state — no ZIP yet */}
       {!geoLocation && (
         <div className="max-w-3xl mx-auto px-4 py-12">
-          <Card className="p-8 text-center">
-            <MapPin className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Enter Your ZIP Code</h3>
-            <p className="text-muted-foreground text-sm">
-              Enter your ZIP code above to discover deals from real local businesses near you
+          <Card className="p-10 text-center border-dashed border-2">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Enter Your ZIP Code</h3>
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+              Enter your ZIP code in the search bar above to discover deals from real local businesses near you
             </p>
           </Card>
         </div>
       )}
 
-      {/* Categories Section */}
-      <div className="px-4 py-6 border-t border-border">
+      {/* Browse by Category */}
+      <div className="px-4 py-6 border-t border-border bg-card mt-2">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide">Browse by Category</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-2"
+            <h3 className="text-base font-bold">Browse by Category</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-primary"
               onClick={() => setLocation("/browse")}
               data-testid="button-filters"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filters
+              All Filters
             </Button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                data-testid={`button-category-${category.toLowerCase()}`}
-                variant="secondary"
-                size="lg"
-                className="rounded-full whitespace-nowrap px-6 text-base font-semibold"
-                onClick={() => setLocation("/browse")}
-              >
-                {category}
-              </Button>
-            ))}
+          <div className="grid grid-cols-4 gap-3">
+            {["Food & Dining", "Retail", "Automotive", "Entertainment", "Local Business", "Health", "Fashion", "Fitness"].map((category) => {
+              const Icon = categoryIcons[category] || Tag;
+              return (
+                <button
+                  key={category}
+                  data-testid={`button-category-${category.toLowerCase()}`}
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-secondary hover-elevate active-elevate-2 transition-colors"
+                  onClick={() => setLocation("/browse")}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">{category}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

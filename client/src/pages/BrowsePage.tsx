@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, SlidersHorizontal, MapPin, Loader2, AlertCircle, BadgeCheck, Smartphone, Heart, Store, UtensilsCrossed } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, Loader2, AlertCircle, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import DealCard from "@/components/DealCard";
 import DealDetailModal from "@/components/DealDetailModal";
 import BottomNav from "@/components/BottomNav";
 import type { Coupon, SavedDeal } from "@shared/schema";
@@ -55,7 +56,6 @@ export default function BrowsePage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const { toast } = useToast();
 
-  // Load saved location from localStorage
   const [savedZip, setSavedZip] = useState<string | null>(null);
   const [savedLocation, setSavedLocation] = useState<GeocodedLocation | null>(null);
 
@@ -72,7 +72,6 @@ export default function BrowsePage() {
     }
   }, []);
 
-  // Fetch real deals from Overpass API using saved location
   const { data: nearbyDeals = [], isLoading } = useQuery<(Coupon & { distance: number })[]>({
     queryKey: savedLocation && savedZip
       ? [`/api/coupons/nearby?latitude=${savedLocation.latitude}&longitude=${savedLocation.longitude}&radius=10&zipCode=${encodeURIComponent(savedZip)}`]
@@ -86,10 +85,8 @@ export default function BrowsePage() {
 
   const savedDealIds = new Set(savedDeals.map((sd) => sd.couponId));
 
-  // Filter and sort deals
   const sortedDeals = nearbyDeals
     .filter((deal) => {
-      // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -101,33 +98,22 @@ export default function BrowsePage() {
       return true;
     })
     .filter((deal) => {
-      // Category filter
       if (selectedCategories.length > 0) {
-        // "App Required" matches deals where requiresApp is true
-        if (selectedCategories.includes("App Required") && (deal as any).requiresApp) {
-          return true;
-        }
+        if (selectedCategories.includes("App Required") && (deal as any).requiresApp) return true;
         const nonAppCategories = selectedCategories.filter(c => c !== "App Required");
-        if (nonAppCategories.length > 0) {
-          return nonAppCategories.includes(deal.category);
-        }
+        if (nonAppCategories.length > 0) return nonAppCategories.includes(deal.category);
         return false;
       }
       return true;
     })
     .sort((a, b) => {
-      // Sort
-      if (sortBy === "Nearest") {
-        return (a.distance || 0) - (b.distance || 0);
-      }
+      if (sortBy === "Nearest") return (a.distance || 0) - (b.distance || 0);
       if (sortBy === "Expiring Soon") {
         if (!a.expirationDate) return 1;
         if (!b.expirationDate) return -1;
         return new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime();
       }
-      if (sortBy === "Most Popular") {
-        return (b.claimCount || 0) - (a.claimCount || 0);
-      }
+      if (sortBy === "Most Popular") return (b.claimCount || 0) - (a.claimCount || 0);
       if (sortBy === "Highest Discount") {
         const getDiscountValue = (discount: string) => {
           const percentMatch = discount.match(/(\d+)%/);
@@ -143,25 +129,19 @@ export default function BrowsePage() {
       return 0;
     });
 
-  // Deduplicate deals - only show each unique coupon code once per brand
   const filteredDeals = sortedDeals.filter((deal, index, array) => {
     const dealCode = (deal as any).code || '';
     const brandName = deal.storeName.toLowerCase();
-    
-    // Find if this code+brand combination appeared earlier
     const firstIndex = array.findIndex(d => {
       const dCode = (d as any).code || '';
       const dBrand = d.storeName.toLowerCase();
       return dCode === dealCode && dBrand === brandName;
     });
-    
-    // Only keep if this is the first occurrence
     return firstIndex === index;
   });
 
   const handleSave = async (deal: any) => {
     const isSaved = savedDealIds.has(deal.id);
-    
     try {
       if (isSaved) {
         await apiRequest("DELETE", `/api/saved-deals/${deal.id}`, undefined);
@@ -189,69 +169,63 @@ export default function BrowsePage() {
           storeType: deal.storeType,
         });
       }
-      
       await queryClient.invalidateQueries({ queryKey: ["/api/saved-deals"] });
-      
       toast({
         title: isSaved ? "Deal removed" : "Deal saved!",
         description: isSaved ? "Removed from your saved deals" : "Added to your saved deals",
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update saved deals",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to update saved deals", variant: "destructive" });
     }
   };
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-background border-b border-border z-40 px-4 py-4">
+      <div className="sticky top-0 bg-card/95 backdrop-blur-sm border-b border-border z-40 px-4 py-4 shadow-sm">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-semibold mb-2">Browse Deals</h1>
-          
-          {savedLocation && savedZip ? (
-            <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              Showing deals near {savedLocation.city || savedZip}
-            </p>
-          ) : (
-            <p className="text-sm text-amber-600 dark:text-amber-500 mb-4">
-              Search for a ZIP code on the Home page to see local deals
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-xl font-bold">Browse Deals</h1>
+            {savedLocation && savedZip && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {savedLocation.city || savedZip}
+              </span>
+            )}
+          </div>
+
+          {!savedLocation && (
+            <p className="text-xs text-amber-600 dark:text-amber-500 mb-3">
+              Search a ZIP code on Home to see local deals
             </p>
           )}
-          
-          {/* Search and Filter */}
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 mt-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 data-testid="input-search-browse"
                 type="search"
                 placeholder="Search deals..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-9 rounded-full bg-secondary border-0"
               />
             </div>
-            
+
             <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
               <SheetTrigger asChild>
                 <Button
                   data-testid="button-filters"
                   variant="outline"
                   size="icon"
-                  className="relative"
+                  className="relative rounded-full"
                 >
                   <SlidersHorizontal className="w-5 h-5" />
                   {selectedCategories.length > 0 && (
@@ -263,13 +237,13 @@ export default function BrowsePage() {
               </SheetTrigger>
               <SheetContent className="flex flex-col">
                 <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
+                  <div className="h-1.5 w-full rounded-full bg-gradient-to-r from-primary to-accent mb-2" />
+                  <SheetTitle className="text-lg font-bold">Filters</SheetTitle>
                 </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto mt-6 space-y-6 pr-1">
-                  {/* Category Filter */}
+                <div className="flex-1 overflow-y-auto mt-4 space-y-6 pr-1">
                   <div>
-                    <h3 className="text-sm font-semibold mb-3">Categories</h3>
+                    <h3 className="text-sm font-bold mb-3 text-foreground">Categories</h3>
                     <div className="space-y-2">
                       {allCategories.map((category) => (
                         <div key={category} className="flex items-center space-x-2">
@@ -277,6 +251,7 @@ export default function BrowsePage() {
                             id={`category-${category}`}
                             checked={selectedCategories.includes(category)}
                             onCheckedChange={() => toggleCategory(category)}
+                            className="data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                           />
                           <Label
                             htmlFor={`category-${category}`}
@@ -289,30 +264,31 @@ export default function BrowsePage() {
                     </div>
                   </div>
 
-                  {/* Sort By */}
                   <div>
-                    <h3 className="text-sm font-semibold mb-3">Sort By</h3>
-                    <div className="space-y-2">
+                    <h3 className="text-sm font-bold mb-3 text-foreground">Sort By</h3>
+                    <div className="flex flex-wrap gap-2">
                       {sortOptions.map((option) => (
-                        <Badge
+                        <button
                           key={option}
-                          variant={sortBy === option ? "default" : "secondary"}
-                          className="cursor-pointer mr-2"
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                            sortBy === option
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                          }`}
                           onClick={() => setSortBy(option)}
                         >
                           {option}
-                        </Badge>
+                        </button>
                       ))}
                     </div>
                   </div>
-
                 </div>
 
                 <div className="pt-4 border-t mt-2">
                   <Button
                     data-testid="button-apply-filters"
                     onClick={() => setFilterOpen(false)}
-                    className="w-full"
+                    className="w-full rounded-full"
                   >
                     Apply Filters
                   </Button>
@@ -321,14 +297,13 @@ export default function BrowsePage() {
             </Sheet>
           </div>
 
-          {/* Active Filters */}
           {selectedCategories.length > 0 && (
             <div className="flex gap-2 mt-3 flex-wrap">
               {selectedCategories.map((category) => (
                 <Badge
                   key={category}
                   variant="default"
-                  className="cursor-pointer"
+                  className="cursor-pointer bg-accent text-accent-foreground rounded-full"
                   onClick={() => toggleCategory(category)}
                 >
                   {category} ×
@@ -339,39 +314,41 @@ export default function BrowsePage() {
         </div>
       </div>
 
-      {/* Deals Grid */}
+      {/* Deals */}
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {/* No location set */}
         {!savedLocation && (
-          <Card className="p-8 text-center">
-            <MapPin className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Set Your Location</h3>
+          <Card className="p-10 text-center border-dashed border-2">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Set Your Location</h3>
             <p className="text-muted-foreground text-sm mb-4">
               Enter your ZIP code on the Home page to browse deals near you
             </p>
-            <Button onClick={() => window.location.href = "/"}>
+            <Button className="rounded-full" onClick={() => window.location.href = "/"}>
               Go to Home
             </Button>
           </Card>
         )}
 
-        {/* Location set - show deals */}
         {savedLocation && (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground mb-4 font-medium">
               {filteredDeals.length} deals found
             </p>
 
             {isLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />
+                  <div key={i} className="h-52 bg-muted rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : filteredDeals.length === 0 ? (
-              <Card className="p-8 text-center">
-                <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                <h4 className="font-semibold mb-2">No Deals Found</h4>
+              <Card className="p-10 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-muted-foreground animate-pulse-soft" />
+                </div>
+                <h4 className="font-bold text-base mb-2">No Deals Found</h4>
                 <p className="text-sm text-muted-foreground">
                   {searchQuery || selectedCategories.length > 0
                     ? "Try adjusting your filters"
@@ -380,78 +357,30 @@ export default function BrowsePage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {filteredDeals.map((deal) => (
-                  <Card
-                    key={deal.id}
-                    className="p-4 cursor-pointer hover-elevate"
-                    onClick={() => setSelectedDeal(deal)}
-                    data-testid={`card-browse-deal-${deal.id}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          {deal.storeLogoUrl && (
-                            <img
-                              src={deal.storeLogoUrl}
-                              alt={deal.storeName}
-                              className="w-6 h-6 object-contain rounded"
-                            />
-                          )}
-                          <p className="font-semibold text-sm">{deal.storeName}</p>
-                          {(deal as any).storeType && (
-                            <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5">
-                              {(deal as any).storeType === "Store" ? <Store className="w-3 h-3" /> : <UtensilsCrossed className="w-3 h-3" />}
-                              {(deal as any).storeType}
-                            </Badge>
-                          )}
-                          {(deal as any).isCurated && (deal as any).isVerified && (
-                            <Badge variant="default" className="gap-1 text-xs px-1.5 py-0 h-5 bg-green-600 hover:bg-green-700">
-                              <BadgeCheck className="w-3 h-3" />
-                              Verified
-                            </Badge>
-                          )}
-                          {(deal as any).isLocalBusiness && (
-                            <Badge variant="outline" className="gap-1 text-xs px-1.5 py-0 h-5 text-indigo-600 border-indigo-300 dark:text-indigo-400 dark:border-indigo-700">
-                              <MapPin className="w-3 h-3" />
-                              Local
-                            </Badge>
-                          )}
-                        </div>
-                        <h4 className="text-2xl font-bold text-primary mb-1">
-                          {deal.discountAmount}
-                        </h4>
-                        <p className="text-sm mb-2">{deal.title}</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="secondary" className="text-xs">
-                            {deal.category}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground">
-                            {deal.distance?.toFixed(1)} miles away
-                          </p>
-                          {(deal as any).requiresApp && (
-                            <span className="text-xs text-amber-600 dark:text-amber-500 flex items-center gap-1">
-                              <Smartphone className="w-3 h-3" />
-                              App Required
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        data-testid={`button-save-${deal.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSave(deal);
-                        }}
-                        className="p-2 rounded-full hover-elevate active-elevate-2 flex-shrink-0"
-                      >
-                        <Heart
-                          className={`w-5 h-5 ${
-                            savedDealIds.has(deal.id) ? "fill-primary text-primary" : "text-muted-foreground"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </Card>
+                {filteredDeals.map((deal, i) => (
+                  <div key={deal.id} style={{ animationDelay: `${i * 40}ms` }}>
+                    <DealCard
+                      id={deal.id}
+                      storeName={deal.storeName}
+                      storeLogoUrl={deal.storeLogoUrl ?? undefined}
+                      discountAmount={deal.discountAmount}
+                      title={deal.title}
+                      description={deal.description ?? undefined}
+                      category={deal.category}
+                      expirationDate={deal.expirationDate}
+                      claimCount={deal.claimCount ?? 0}
+                      isTrending={deal.isTrending ?? false}
+                      isSaved={savedDealIds.has(deal.id)}
+                      isCurated={(deal as any).isCurated}
+                      isVerified={(deal as any).isVerified}
+                      isLocalBusiness={(deal as any).isLocalBusiness}
+                      requiresApp={(deal as any).requiresApp}
+                      code={(deal as any).code}
+                      distance={deal.distance}
+                      onSave={() => handleSave(deal)}
+                      onViewDeal={() => setSelectedDeal(deal)}
+                    />
+                  </div>
                 ))}
               </div>
             )}
