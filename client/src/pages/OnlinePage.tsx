@@ -354,7 +354,7 @@ export default function OnlinePage() {
                     <div className="space-y-4">
                         {filteredDeals.map((deal, i) => {
                             const isSaved = savedDealIds.has(deal.id);
-                            const bannerImg = getCategoryImage(deal.category || "Retail");
+                            const bannerImg = getCategoryImage(normalizeDealCategory(deal.category));
                             return (
                                 <Card
                                     key={deal.id}
