@@ -13,6 +13,81 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getCategoryImage } from "@/lib/categoryImages";
 
+const TAG_MAP: Record<string, string> = {
+  "fashion": "Fashion",
+  "womens apparels": "Fashion",
+  "mens apparels": "Fashion",
+  "ethnic wear": "Fashion",
+  "lingerie": "Fashion",
+  "handbags and wallets": "Fashion",
+  "jewellery": "Fashion",
+  "fashion accessories": "Fashion",
+  "eyewear": "Fashion",
+  "watches": "Fashion",
+  "footwear": "Footwear",
+  "kids and toddlers": "Kids & Baby",
+  "kids fashion": "Kids & Baby",
+  "baby care": "Kids & Baby",
+  "maternity": "Kids & Baby",
+  "baby gears": "Kids & Baby",
+  "baby food": "Kids & Baby",
+  "school stuff": "Education",
+  "stationary": "Education",
+  "arts and crafts": "Education",
+  "entertainment": "Entertainment",
+  "board games and toys": "Entertainment",
+  "cds books and magazine": "Entertainment",
+  "merchandise": "Entertainment",
+  "gaming consoles": "Entertainment",
+  "sports and outdoor": "Sports",
+  "sportswear": "Sports",
+  "sports gear": "Sports",
+  "cycles and electric bikes": "Sports",
+  "health and beauty": "Beauty",
+  "body care": "Beauty",
+  "makeup products": "Beauty",
+  "nutrition": "Beauty",
+  "sanitary products": "Beauty",
+  "home and living": "Home",
+  "furniture and decor": "Home",
+  "housekeeping": "Home",
+  "gardening supplies": "Home",
+  "kitchenware": "Home",
+  "home appliances": "Electronics",
+  "electronics and gadgets": "Electronics",
+  "travel": "Travel",
+  "travel gear": "Travel",
+  "food and beverages": "Food",
+  "snacks and drinks": "Food",
+  "grocery": "Food",
+  "cake and flowers": "Food",
+  "gift items": "Gifts",
+  "gift cards": "Gifts",
+  "personalised gifts": "Gifts",
+  "car and bike accessories": "Automotive",
+};
+
+const CATEGORY_PRIORITY = [
+  "Food", "Electronics", "Automotive", "Travel", "Sports",
+  "Beauty", "Home", "Gifts", "Education", "Entertainment",
+  "Footwear", "Kids & Baby", "Fashion",
+];
+
+function normalizeDealCategory(raw: string | undefined): string {
+  if (!raw) return "Other";
+  const tags = raw.split(",").map(t => t.trim().toLowerCase());
+  for (const priority of CATEGORY_PRIORITY) {
+    for (const tag of tags) {
+      if (TAG_MAP[tag] === priority) return priority;
+    }
+  }
+  for (const tag of tags) {
+    const mapped = TAG_MAP[tag];
+    if (mapped) return mapped;
+  }
+  return "Other";
+}
+
 export default function OnlinePage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -36,18 +111,17 @@ export default function OnlinePage() {
 
     const onlineDeals = onlineDealsQuery.data?.coupons || [];
 
-    // Derive unique categories from loaded deals, sorted by frequency
+    // Derive unique short categories sorted by frequency
     const availableCategories = useMemo(() => {
         const counts: Record<string, number> = {};
         for (const deal of onlineDeals) {
-            const cat = deal.category?.trim();
-            if (cat && cat.toLowerCase() !== "online") {
-                counts[cat] = (counts[cat] || 0) + 1;
+            const normalized = normalizeDealCategory(deal.category);
+            if (normalized !== "Other") {
+                counts[normalized] = (counts[normalized] || 0) + 1;
             }
         }
         return Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
-            .slice(0, 15)
             .map(([cat]) => cat);
     }, [onlineDeals]);
 
@@ -68,7 +142,7 @@ export default function OnlinePage() {
 
         const categorised = searched.filter(deal => {
             if (!selectedCategory) return true;
-            return deal.category?.trim() === selectedCategory;
+            return normalizeDealCategory(deal.category) === selectedCategory;
         });
 
         // Deduplicate
@@ -227,7 +301,7 @@ export default function OnlinePage() {
                         {selectedCategory ? (
                             <span>
                                 <span className="text-foreground font-semibold">{selectedCategory}</span>
-                                {' '}&mdash; {filteredDeals.length} {filteredDeals.length === 1 ? "deal" : "deals"}
+                                &nbsp;&mdash; {filteredDeals.length} {filteredDeals.length === 1 ? "deal" : "deals"}
                             </span>
                         ) : (
                             `${filteredDeals.length} ${filteredDeals.length === 1 ? "deal" : "deals"}`
@@ -321,9 +395,9 @@ export default function OnlinePage() {
                                                         <Globe className="w-3 h-3" />
                                                         Online
                                                     </Badge>
-                                                    {deal.category && deal.category.toLowerCase() !== "online" && (
+                                                    {deal.category && normalizeDealCategory(deal.category) !== "Other" && (
                                                         <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 flex-shrink-0">
-                                                            {deal.category}
+                                                            {normalizeDealCategory(deal.category)}
                                                         </Badge>
                                                     )}
                                                 </div>
