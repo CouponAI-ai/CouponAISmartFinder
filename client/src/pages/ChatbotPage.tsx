@@ -14,7 +14,7 @@ function renderMarkdown(text: string) {
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={key++} className="list-disc list-inside space-y-0.5 my-1">
+        <ul key={key++} className="space-y-2 my-1">
           {listItems}
         </ul>
       );
@@ -28,7 +28,7 @@ function renderMarkdown(text: string) {
       <>
         {parts.map((part, i) =>
           part.startsWith("**") && part.endsWith("**")
-            ? <strong key={i}>{part.slice(2, -2)}</strong>
+            ? <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
             : <span key={i}>{part}</span>
         )}
       </>
@@ -39,20 +39,32 @@ function renderMarkdown(text: string) {
     const line = raw.trim();
     if (!line) {
       flushList();
-      elements.push(<div key={key++} className="h-1" />);
       continue;
     }
-    if (line.startsWith("- ") || line.startsWith("• ")) {
+    // Strip any heading markers (###, ##, #) — treat as plain text
+    const stripped = line.replace(/^#{1,6}\s+/, "");
+    if (stripped.startsWith("- ") || stripped.startsWith("• ")) {
       listItems.push(
-        <li key={key++} className="ml-2">{inlineFormat(line.slice(2))}</li>
+        <li key={key++} className="flex gap-2 leading-snug">
+          <span className="text-accent mt-0.5 flex-shrink-0">•</span>
+          <span>{inlineFormat(stripped.slice(2))}</span>
+        </li>
+      );
+    } else if (/^\d+\.\s/.test(stripped)) {
+      const content = stripped.replace(/^\d+\.\s/, "");
+      listItems.push(
+        <li key={key++} className="flex gap-2 leading-snug">
+          <span className="text-accent mt-0.5 flex-shrink-0">•</span>
+          <span>{inlineFormat(content)}</span>
+        </li>
       );
     } else {
       flushList();
-      elements.push(<p key={key++} className="leading-snug">{inlineFormat(line)}</p>);
+      elements.push(<p key={key++} className="leading-snug">{inlineFormat(stripped)}</p>);
     }
   }
   flushList();
-  return <div className="space-y-1 text-sm">{elements}</div>;
+  return <div className="space-y-1.5 text-sm">{elements}</div>;
 }
 
 interface Message {
