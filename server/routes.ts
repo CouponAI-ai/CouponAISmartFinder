@@ -713,10 +713,10 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
           "X-Title": "CouponAI",
         },
         body: JSON.stringify({
-          model: "openrouter/auto",
+          model: "openrouter/free",
           messages,
           temperature: 0.7,
-          max_tokens: 300,
+          max_tokens: 800,
         }),
       });
 
@@ -727,10 +727,11 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
       }
 
       const orData = await orRes.json() as any;
-      let reply = orData.choices?.[0]?.message?.content?.trim()
-        ?? "I couldn't come up with a response. Try asking me about a specific store or deal category!";
+      const msg = orData.choices?.[0]?.message;
+      let reply = (msg?.content ?? msg?.reasoning ?? "")
+        .trim()
+        || "I couldn't come up with a response. Try asking me about a specific store or deal category!";
 
-      // Strip citation markers like [1], [2], [1][3], etc.
       reply = reply.replace(/\[\d+\]/g, "").replace(/\s{2,}/g, " ").trim();
 
       res.json({ reply, blocked: false });

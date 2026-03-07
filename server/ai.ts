@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import type { Coupon } from "@shared/schema";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
-const FREE_MODEL = "openrouter/auto";
+const FREE_MODEL = "openrouter/free";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
