@@ -713,7 +713,7 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
           "X-Title": "CouponAI",
         },
         body: JSON.stringify({
-          model: "openrouter/auto",
+          model: "meta-llama/llama-3.1-8b-instruct:free",
           messages,
           temperature: 0.7,
           max_tokens: 300,
