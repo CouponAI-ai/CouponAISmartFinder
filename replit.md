@@ -36,7 +36,17 @@ The application integrates with OpenStreetMap's Nominatim API for zip code geoco
 
 ### AI Integration
 
-OpenAI's GPT-based engine provides personalized coupon recommendations based on user preferences and available deals. It includes a graceful fallback to category-based filtering if the AI service is unavailable.
+OpenAI's GPT-based engine provides two AI features:
+
+1. **AI Picks** (`/ai-picks`): Personalized coupon recommendations based on user preferences and nearby deals. Graceful fallback to category-based filtering if unavailable.
+
+2. **AI Chatbot** (`/chatbot`): A conversational assistant where users can ask for any specific coupon or deal. Features:
+   - Friendly, deal-focused personality restricted to coupon/shopping topics
+   - Multi-layer guardrails: input screening (regex blocks prompt injection, SQL commands, data dump requests) + system prompt restrictions
+   - Conversation history (last 10 turns for context)
+   - Fallback response if OpenAI is unavailable
+   - Starter suggestion chips, typing indicator, and sparkly animated header
+   - Clear/reset button to start fresh conversations
 
 ### Coupon Data Sources
 

@@ -14,6 +14,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import MapPage from "@/pages/MapPage";
 import OnlinePage from "@/pages/OnlinePage";
 import NotFound from "@/pages/not-found";
+import ChatbotPage from "@/pages/ChatbotPage";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/saved" component={SavedPage} />
       <Route path="/map" component={MapPage} />
       <Route path="/online" component={OnlinePage} />
+      <Route path="/chatbot" component={ChatbotPage} />
       <Route path="/profile" component={ProfilePage} />
       <Route component={NotFound} />
     </Switch>
