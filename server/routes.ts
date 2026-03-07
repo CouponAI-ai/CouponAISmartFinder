@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer } from "http";
+import OpenAI from "openai";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
 import { calculateDistance, geocodeZipCode, isInZipCode, filterBusinessesByZipCode } from "./geocoding";
@@ -660,12 +661,9 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      // ── Guardrail 2: OpenAI required ─────────────────────────────────────
-      const openai = process.env.OPENAI_API_KEY
-        ? new (await import("openai")).default({ apiKey: process.env.OPENAI_API_KEY })
-        : null;
-
-      if (!openai) {
+      // ── Guardrail 2: API key required ────────────────────────────────────
+      const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
+      if (!apiKey) {
         return res.json({
           reply:
             "I'm having trouble connecting to my AI brain right now. In the meantime, browse the deals on the Home or Browse tabs — there are lots of great verified coupons waiting for you!",
@@ -700,19 +698,37 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
         : [];
 
       const messages = [
-        { role: "system" as const, content: systemPrompt },
+        { role: "system", content: systemPrompt },
         ...safeHistory,
-        { role: "user" as const, content: message.slice(0, 500) },
+        { role: "user", content: message.slice(0, 500) },
       ];
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages,
-        temperature: 0.7,
-        max_tokens: 300,
+      // ── Direct fetch to OpenRouter ──────────────────────────────────────
+      const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://couponai.replit.app",
+          "X-Title": "CouponAI",
+        },
+        body: JSON.stringify({
+          model: "openrouter/auto",
+          messages,
+          temperature: 0.7,
+          max_tokens: 300,
+        }),
       });
 
-      const reply = response.choices[0]?.message?.content?.trim() ?? "I couldn't come up with a response. Try asking me about a specific store or deal category!";
+      if (!orRes.ok) {
+        const errText = await orRes.text();
+        console.error("OpenRouter error:", orRes.status, errText);
+        throw new Error(`OpenRouter ${orRes.status}: ${errText}`);
+      }
+
+      const orData = await orRes.json() as any;
+      const reply = orData.choices?.[0]?.message?.content?.trim()
+        ?? "I couldn't come up with a response. Try asking me about a specific store or deal category!";
 
       res.json({ reply, blocked: false });
     } catch (error) {

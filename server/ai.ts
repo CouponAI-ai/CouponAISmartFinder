@@ -1,8 +1,18 @@
 import OpenAI from "openai";
 import type { Coupon } from "@shared/schema";
 
+const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
+const FREE_MODEL = "openrouter/auto";
+
 const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: OPENROUTER_BASE,
+      defaultHeaders: {
+        "HTTP-Referer": "https://couponai.replit.app",
+        "X-Title": "CouponAI",
+      },
+    })
   : null;
 
 interface AIRecommendation {
@@ -15,18 +25,15 @@ export async function getAIRecommendations(
   allDeals: any[],
   userCategories: string[]
 ): Promise<AIRecommendation[]> {
-  // If no deals, return empty
   if (!allDeals || allDeals.length === 0) {
     return [];
   }
 
-  // If no OpenAI key, throw to use fallback
   if (!openai) {
-    throw new Error("OpenAI not configured");
+    throw new Error("AI not configured");
   }
 
   try {
-    // Create a simplified list for AI analysis
     const simplifiedDeals = allDeals.map((d) => ({
       id: d.id,
       store: d.storeName,
@@ -37,7 +44,7 @@ export async function getAIRecommendations(
       distance: d.distance?.toFixed(1),
     }));
 
-    const preferencesText = userCategories.length > 0 
+    const preferencesText = userCategories.length > 0
       ? `User preferences: ${userCategories.join(", ")}`
       : "No specific preferences set";
 
@@ -63,7 +70,7 @@ Return a JSON array with exactly this format:
 Return ONLY the JSON array, no other text.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: FREE_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 500,
@@ -71,15 +78,13 @@ Return ONLY the JSON array, no other text.`;
 
     const content = response.choices[0]?.message?.content?.trim();
     if (!content) {
-      throw new Error("No response from OpenAI");
+      throw new Error("No response from AI");
     }
 
-    // Parse the AI response
     let aiPicks: { id: string; reason: string }[];
     try {
       aiPicks = JSON.parse(content);
     } catch (parseError) {
-      // Try to extract JSON from the response
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         aiPicks = JSON.parse(jsonMatch[0]);
@@ -87,8 +92,7 @@ Return ONLY the JSON array, no other text.`;
         throw new Error("Could not parse AI response");
       }
     }
-    
-    // Map AI picks back to full deals with reasons
+
     const recommendations: AIRecommendation[] = aiPicks
       .map((pick, index) => {
         const deal = allDeals.find((d) => d.id === pick.id);
@@ -96,7 +100,7 @@ Return ONLY the JSON array, no other text.`;
         return {
           deal,
           reason: pick.reason || "Recommended by AI based on value and location",
-          score: 100 - (index * 10), // Score decreases by rank
+          score: 100 - (index * 10),
         };
       })
       .filter((r): r is AIRecommendation => r !== null);
@@ -104,6 +108,6 @@ Return ONLY the JSON array, no other text.`;
     return recommendations.length > 0 ? recommendations : [];
   } catch (error) {
     console.error("AI recommendation error:", error);
-    throw error; // Let caller handle fallback
+    throw error;
   }
 }
