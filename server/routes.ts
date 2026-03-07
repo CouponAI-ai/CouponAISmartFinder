@@ -713,7 +713,7 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
           "X-Title": "CouponAI",
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3.1-8b-instruct:free",
+          model: "openrouter/auto",
           messages,
           temperature: 0.7,
           max_tokens: 300,
@@ -727,8 +727,11 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
       }
 
       const orData = await orRes.json() as any;
-      const reply = orData.choices?.[0]?.message?.content?.trim()
+      let reply = orData.choices?.[0]?.message?.content?.trim()
         ?? "I couldn't come up with a response. Try asking me about a specific store or deal category!";
+
+      // Strip citation markers like [1], [2], [1][3], etc.
+      reply = reply.replace(/\[\d+\]/g, "").replace(/\s{2,}/g, " ").trim();
 
       res.json({ reply, blocked: false });
     } catch (error) {

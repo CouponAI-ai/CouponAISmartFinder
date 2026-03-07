@@ -5,6 +5,56 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNav from "@/components/BottomNav";
 
+function renderMarkdown(text: string) {
+  const lines = text.split("\n");
+  const elements: JSX.Element[] = [];
+  let listItems: JSX.Element[] = [];
+  let key = 0;
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul key={key++} className="list-disc list-inside space-y-0.5 my-1">
+          {listItems}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  const inlineFormat = (line: string): JSX.Element => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <>
+        {parts.map((part, i) =>
+          part.startsWith("**") && part.endsWith("**")
+            ? <strong key={i}>{part.slice(2, -2)}</strong>
+            : <span key={i}>{part}</span>
+        )}
+      </>
+    );
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushList();
+      elements.push(<div key={key++} className="h-1" />);
+      continue;
+    }
+    if (line.startsWith("- ") || line.startsWith("• ")) {
+      listItems.push(
+        <li key={key++} className="ml-2">{inlineFormat(line.slice(2))}</li>
+      );
+    } else {
+      flushList();
+      elements.push(<p key={key++} className="leading-snug">{inlineFormat(line)}</p>);
+    }
+  }
+  flushList();
+  return <div className="space-y-1 text-sm">{elements}</div>;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -159,15 +209,17 @@ export default function ChatbotPage() {
 
             {/* Bubble */}
             <div
-              className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              className={`max-w-[78%] rounded-2xl px-4 py-3 leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-primary text-primary-foreground rounded-br-sm"
+                  ? "bg-primary text-primary-foreground rounded-br-sm text-sm"
                   : msg.blocked
                   ? "bg-amber-50 border border-amber-200 text-amber-900 rounded-bl-sm dark:bg-amber-950/30 dark:border-amber-700 dark:text-amber-200"
                   : "bg-card text-card-foreground border border-border rounded-bl-sm shadow-sm"
               }`}
             >
-              {msg.content}
+              {msg.role === "assistant"
+                ? renderMarkdown(msg.content)
+                : msg.content}
             </div>
           </div>
         ))}
