@@ -1,0 +1,144 @@
+Redesign the homepage layout of this coupon searching app to improve usability, visual clarity, and browsing flow while keeping all existing functionality connected and working.
+
+Do not break APIs, search logic, ZIP filtering, coupon retrieval, AI recommendations, or database connections.
+
+Focus only on improving the UI/UX structure and visual organization.
+
+1. Simplify the Hero Section
+
+At the top of the page:
+
+Make the app name "CouponAI" large and centered
+
+Remove the text
+"Real coupons from real businesses near you — verified & ready to use"
+
+Keep a simple headline such as
+"Find the Best Local Deals Instantly"
+
+Place the ZIP code search bar prominently under the title
+
+2. Replace the Vertical Coupon Feed
+
+Currently the homepage shows coupons in a long vertical list requiring excessive scrolling.
+
+Replace this with category-based horizontal sections similar to the Apple App Store.
+
+Example structure:
+
+Trending Deals
+
+Restaurants Near You
+
+Retail Deals
+
+Recommended For You
+
+Each section should:
+
+Display 4–6 coupon cards
+
+Scroll horizontally
+
+Include a “View All →” button linking to the full category page.
+
+3. Add Category Browsing Section
+
+Below the hero section, add category cards so users can quickly browse deals.
+
+Example categories:
+
+🍔 Restaurants
+
+🛍 Retail
+
+☕ Coffee
+
+🎮 Entertainment
+
+🛒 Groceries
+
+🏬 Local Deals
+
+Each category should be displayed as a large clickable card with an icon and background image.
+
+4. Improve Coupon Card Design
+
+Redesign coupon cards to be more visual and modern.
+
+Each card should include:
+
+Business image
+
+Large discount percentage
+
+Business name
+
+Expiration date
+
+“Copy Code” button
+
+Use:
+
+Rounded corners
+
+Soft shadows
+
+Hover animations
+
+Clear typography hierarchy
+
+5. Add Dynamic Images
+
+For category sections and coupon cards:
+
+Load relevant business or category images dynamically from internet sources or APIs
+
+Rotate or refresh images occasionally to keep the homepage visually engaging.
+
+6. Improve Layout and Spacing
+
+Make the page more compartmentalized:
+
+Clear sections with spacing
+
+Section headers with icons
+
+Card-based layout
+
+Avoid large blocks of text
+
+The goal is to prevent the page from feeling cluttered.
+
+7. Color Scheme
+
+Use a consistent palette based on:
+
+Primary: Green
+Accent: Yellow
+
+Keep backgrounds light and neutral so deals stand out.
+
+8. Smooth UI Transitions
+
+Add subtle animations similar to the Apple App Store:
+
+Card hover effects
+
+Smooth scrolling between sections
+
+Fade-in card loading
+
+Gentle slide transitions
+
+9. Maintain Responsiveness
+
+Ensure the homepage works well on:
+
+Desktop
+
+Tablet
+
+Mobile
+
+Horizontal coupon sections should support swiping on mobile devices.
