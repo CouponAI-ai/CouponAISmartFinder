@@ -204,8 +204,8 @@ export default function DealCard({
             <button
               data-testid={`button-copy-code-${id}`}
               onClick={handleCopyCode}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs font-bold hover-elevate active-elevate-2 flex-shrink-0 transition-all text-white"
-              style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs font-bold hover-elevate active-elevate-2 flex-shrink-0 transition-all"
+              style={{ background: copied ? "hsl(45 93% 38%)" : "hsl(var(--accent))", color: "hsl(40 50% 10%)" }}
             >
               {copied ? (
                 <><Check className="w-3 h-3" /> Copied!</>

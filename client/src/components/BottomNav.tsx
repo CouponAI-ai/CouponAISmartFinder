@@ -33,7 +33,7 @@ export default function BottomNav() {
               {isActive && (
                 <span
                   className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full transition-all"
-                  style={{ width: 28, background: "hsl(var(--accent))" }}
+                  style={{ width: 28, background: "hsl(var(--primary))" }}
                 />
               )}
 
@@ -49,8 +49,7 @@ export default function BottomNav() {
                 />
                 {(item as any).sparkly && !isActive && (
                   <span
-                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full sparkle-pulse"
-                    style={{ background: "hsl(var(--accent))" }}
+                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full sparkle-pulse bg-yellow-400"
                   />
                 )}
               </div>

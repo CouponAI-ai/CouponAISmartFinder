@@ -180,8 +180,8 @@ function CompactDealCard({ deal, isSaved, onSave, onClick }: CompactDealCardProp
             <button
               data-testid={`button-copy-code-${deal.id}`}
               onClick={handleCopy}
-              className="ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors text-white"
-              style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))" }}
+              className="ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors"
+              style={{ background: copied ? "hsl(45 93% 38%)" : "hsl(var(--accent))", color: "hsl(40 50% 10%)" }}
             >
               {copied ? "Copied!" : `${code}`}
             </button>
@@ -421,16 +421,16 @@ export default function HomePage() {
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <div className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, hsl(214 80% 22%) 0%, hsl(214 70% 34%) 50%, hsl(164 60% 34%) 100%)" }}>
+        style={{ background: "linear-gradient(135deg, hsl(142 71% 20%) 0%, hsl(142 60% 30%) 55%, hsl(90 55% 32%) 100%)" }}>
         {/* decorative orbs */}
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-15"
-          style={{ background: "hsl(164 60% 60%)" }} />
+          style={{ background: "hsl(45 93% 47%)" }} />
         <div className="absolute bottom-0 -left-12 w-40 h-40 rounded-full opacity-10"
-          style={{ background: "hsl(214 80% 60%)" }} />
+          style={{ background: "hsl(142 71% 70%)" }} />
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 pt-10 pb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white font-display leading-tight tracking-tight mb-2">
-            Discover Deals <span style={{ color: "hsl(164 70% 70%)" }}>Near You</span>
+            Discover Deals <span style={{ color: "hsl(45 93% 70%)" }}>Near You</span>
           </h1>
           <p className="text-white/70 text-sm md:text-base mb-7 max-w-xs mx-auto">
             AI-powered coupons from real local businesses
@@ -595,17 +595,17 @@ export default function HomePage() {
                       className="rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                       onClick={() => setSelectedDeal(recommendedSpot)}
                       data-testid="card-home-recommended-spot"
-                      style={{ background: "linear-gradient(135deg, hsl(214 80% 22%), hsl(164 60% 28%))" }}
+                      style={{ background: "linear-gradient(135deg, hsl(142 71% 20%), hsl(80 60% 28%))" }}
                     >
                       <div className="p-4 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: "hsl(164 60% 40% / 0.25)" }}>
-                          <Star className="w-6 h-6" style={{ fill: "hsl(164 70% 70%)", color: "hsl(164 70% 70%)" }} />
+                          style={{ background: "hsl(45 93% 47% / 0.25)" }}>
+                          <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "hsl(164 70% 75%)" }}>Top Pick</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-300 mb-0.5">Top Pick</p>
                           <p className="font-extrabold text-white text-sm truncate">{recommendedSpot.storeName}</p>
-                          <p className="text-xl font-extrabold font-display" style={{ color: "hsl(164 70% 75%)" }}>{recommendedSpot.discountAmount}</p>
+                          <p className="text-xl font-extrabold text-yellow-300 font-display">{recommendedSpot.discountAmount}</p>
                         </div>
                         {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
                           <Badge className="bg-emerald-500 text-white text-[10px] flex-shrink-0">

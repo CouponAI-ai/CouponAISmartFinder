@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is built with React and TypeScript, using Vite for development and a mobile-first responsive design. UI is crafted with Shadcn UI, Radix UI primitives, and Tailwind CSS, featuring a **navy primary (214 80% 28%) + teal accent (164 60% 40%) + light gray-blue background (210 20% 97%)** color theme. Deal cards use photo banners (brand Unsplash photos → category fallback images) via the `BrandLogo` component. Wouter handles client-side routing, and TanStack Query manages server state with caching. Key components include `DealCard`, `DealDetailModal`, `MapView` (with React Leaflet for interactive maps), `BrandLogo` (photo banner system), and a fixed `BottomNav` with teal active indicator for mobile optimization.
+The frontend is built with React and TypeScript, using Vite for development and a mobile-first responsive design. UI is crafted with Shadcn UI, Radix UI primitives, and Tailwind CSS, featuring a **green primary (142 71% 30%) + yellow accent (45 93% 47%) + warm gray background (60 20% 97%)** color theme. Deal cards use photo banners (brand Unsplash photos → category fallback images) via the `BrandLogo` component. Wouter handles client-side routing, and TanStack Query manages server state with caching. Key components include `DealCard`, `DealDetailModal`, `MapView` (with React Leaflet for interactive maps), `BrandLogo` (photo banner system), and a fixed `BottomNav` with teal active indicator for mobile optimization.
 
 ### Backend Architecture
 

@@ -147,7 +147,7 @@ export default function DealDetailModal({
                 onClick={handleCopyCode}
                 className="w-full rounded-full text-base font-bold"
                 size="lg"
-                style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))", color: "white" }}
+                style={{ background: copied ? "hsl(45 93% 38%)" : "hsl(var(--accent))", color: "hsl(40 50% 10%)" }}
               >
                 {copied ? (
                   <><Check className="w-5 h-5 mr-2" /> Copied!</>
