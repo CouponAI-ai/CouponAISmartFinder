@@ -11,6 +11,7 @@ import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getCategoryImage } from "@/lib/categoryImages";
+import { getStoreUrl } from "@/lib/storeUrls";
 import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
@@ -48,6 +49,7 @@ export default function DealDetailModal({
   };
 
   const bannerImage = getCategoryImage(deal.category);
+  const storeUrl = getStoreUrl(deal.storeName);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,15 +166,35 @@ export default function DealDetailModal({
           )}
 
           {/* Shop Now button */}
-          <Button
-            data-testid="button-shop-now"
-            className="w-full mb-5 rounded-full"
-            variant="default"
-            size="lg"
-          >
-            <ExternalLink className="w-5 h-5 mr-2" />
-            Shop Now
-          </Button>
+          {storeUrl ? (
+            <a
+              href={storeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mb-5"
+              data-testid="button-shop-now"
+            >
+              <Button
+                className="w-full rounded-full"
+                variant="default"
+                size="lg"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                Shop at {deal.storeName}
+              </Button>
+            </a>
+          ) : (
+            <Button
+              data-testid="button-shop-now"
+              className="w-full mb-5 rounded-full"
+              variant="default"
+              size="lg"
+              disabled
+            >
+              <ExternalLink className="w-5 h-5 mr-2" />
+              Shop Now
+            </Button>
+          )}
 
           {/* Terms */}
           {deal.termsAndConditions && (
