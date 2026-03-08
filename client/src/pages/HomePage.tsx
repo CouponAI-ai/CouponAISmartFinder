@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 import { getBrandColor } from "@/lib/brandLogos";
+import { getCategoryImage } from "@/lib/categoryImages";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,14 +135,15 @@ function CompactDealCard({ deal, isSaved, onSave, onClick }: CompactDealCardProp
         <BrandLogo
           storeName={deal.storeName}
           storeLogoUrl={deal.storeLogoUrl ?? undefined}
+          categoryFallbackImage={getCategoryImage(deal.category)}
           fill
           className="absolute inset-0"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
 
         {/* Discount badge */}
-        <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-extrabold"
-          style={{ background: "hsl(45 93% 47%)", color: "hsl(40 50% 10%)" }}>
+        <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-extrabold text-white"
+          style={{ background: "hsl(var(--primary) / 0.85)", backdropFilter: "blur(4px)" }}>
           {deal.discountAmount}
         </div>
 
@@ -178,8 +180,8 @@ function CompactDealCard({ deal, isSaved, onSave, onClick }: CompactDealCardProp
             <button
               data-testid={`button-copy-code-${deal.id}`}
               onClick={handleCopy}
-              className="ml-auto text-[10px] font-bold px-2 py-1 rounded-full border transition-colors"
-              style={{ borderColor: "hsl(var(--primary))", color: "hsl(var(--primary))" }}
+              className="ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full transition-colors text-white"
+              style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))" }}
             >
               {copied ? "Copied!" : `${code}`}
             </button>
@@ -419,19 +421,19 @@ export default function HomePage() {
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <div className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, hsl(142 71% 20%) 0%, hsl(142 60% 30%) 55%, hsl(90 55% 32%) 100%)" }}>
-        {/* decorative circles */}
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full opacity-20"
-          style={{ background: "hsl(45 93% 47%)" }} />
-        <div className="absolute top-8 -left-10 w-32 h-32 rounded-full opacity-10"
-          style={{ background: "hsl(142 71% 70%)" }} />
+        style={{ background: "linear-gradient(135deg, hsl(214 80% 22%) 0%, hsl(214 70% 34%) 50%, hsl(164 60% 34%) 100%)" }}>
+        {/* decorative orbs */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-15"
+          style={{ background: "hsl(164 60% 60%)" }} />
+        <div className="absolute bottom-0 -left-12 w-40 h-40 rounded-full opacity-10"
+          style={{ background: "hsl(214 80% 60%)" }} />
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 pt-10 pb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white font-display leading-tight tracking-tight mb-2">
-            Coupon<span style={{ color: "hsl(45 93% 60%)" }}>AI</span>
+            Discover Deals <span style={{ color: "hsl(164 70% 70%)" }}>Near You</span>
           </h1>
           <p className="text-white/70 text-sm md:text-base mb-7 max-w-xs mx-auto">
-            Find the best local deals instantly
+            AI-powered coupons from real local businesses
           </p>
 
           {/* ZIP search */}
@@ -456,8 +458,8 @@ export default function HomePage() {
                 onClick={handleZipSearch}
                 disabled={isGeocoding}
                 size="sm"
-                className="rounded-full flex-shrink-0 font-bold px-5 text-sm border-0"
-                style={{ background: "hsl(45 93% 47%)", color: "hsl(40 50% 10%)" }}
+                className="rounded-full flex-shrink-0 font-bold px-5 text-sm border-0 text-white"
+                style={{ background: "hsl(var(--accent))" }}
               >
                 {isGeocoding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Search"}
               </Button>
@@ -593,17 +595,17 @@ export default function HomePage() {
                       className="rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                       onClick={() => setSelectedDeal(recommendedSpot)}
                       data-testid="card-home-recommended-spot"
-                      style={{ background: "linear-gradient(135deg, hsl(142 71% 20%), hsl(80 60% 28%))" }}
+                      style={{ background: "linear-gradient(135deg, hsl(214 80% 22%), hsl(164 60% 28%))" }}
                     >
                       <div className="p-4 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: "hsl(45 93% 47% / 0.25)" }}>
-                          <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                          style={{ background: "hsl(164 60% 40% / 0.25)" }}>
+                          <Star className="w-6 h-6" style={{ fill: "hsl(164 70% 70%)", color: "hsl(164 70% 70%)" }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-300 mb-0.5">Top Pick</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "hsl(164 70% 75%)" }}>Top Pick</p>
                           <p className="font-extrabold text-white text-sm truncate">{recommendedSpot.storeName}</p>
-                          <p className="text-xl font-extrabold text-yellow-300 font-display">{recommendedSpot.discountAmount}</p>
+                          <p className="text-xl font-extrabold font-display" style={{ color: "hsl(164 70% 75%)" }}>{recommendedSpot.discountAmount}</p>
                         </div>
                         {(recommendedSpot as any).isCurated && (recommendedSpot as any).isVerified && (
                           <Badge className="bg-emerald-500 text-white text-[10px] flex-shrink-0">

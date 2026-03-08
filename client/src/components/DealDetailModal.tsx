@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getStoreUrl } from "@/lib/storeUrls";
 import BrandLogo from "@/components/BrandLogo";
 import { getBrandColor } from "@/lib/brandLogos";
+import { getCategoryImage } from "@/lib/categoryImages";
 import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
@@ -68,6 +69,7 @@ export default function DealDetailModal({
           <BrandLogo
             storeName={deal.storeName}
             storeLogoUrl={deal.storeLogoUrl ?? undefined}
+            categoryFallbackImage={getCategoryImage(deal.category)}
             fill
             className="absolute inset-0"
           />
@@ -136,20 +138,16 @@ export default function DealDetailModal({
 
           {/* Coupon code */}
           {deal.code && (
-            <div className="mb-4">
-              <p className="text-xs text-muted-foreground text-center mb-2 font-medium uppercase tracking-wide">
-                Coupon Code
+            <div className="mb-5">
+              <p className="text-xs text-muted-foreground text-center mb-3 font-semibold uppercase tracking-widest">
+                Your Coupon Code
               </p>
-              <div className="bg-accent/10 border border-accent/30 rounded-lg px-4 py-3 text-center mb-3">
-                <p className="font-mono text-lg font-bold text-accent tracking-widest">
-                  {deal.code}
-                </p>
-              </div>
               <Button
                 data-testid="button-copy-code"
                 onClick={handleCopyCode}
-                className="w-full bg-accent hover:bg-accent text-accent-foreground rounded-full"
+                className="w-full rounded-full text-base font-bold"
                 size="lg"
+                style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))", color: "white" }}
               >
                 {copied ? (
                   <><Check className="w-5 h-5 mr-2" /> Copied!</>
@@ -157,6 +155,12 @@ export default function DealDetailModal({
                   <><Copy className="w-5 h-5 mr-2" /> Copy Code</>
                 )}
               </Button>
+              <div className="mt-2 bg-muted border border-border rounded-lg px-4 py-2.5 text-center">
+                <p className="font-mono text-xl font-extrabold text-foreground tracking-[0.2em]">
+                  {deal.code}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Tap button above to copy</p>
+              </div>
             </div>
           )}
 

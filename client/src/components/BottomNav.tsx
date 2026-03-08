@@ -15,7 +15,8 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card shadow-[0_-1px_0_0_hsl(var(--border)),0_-4px_16px_-4px_rgba(0,0,0,0.08)] z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/98 backdrop-blur-md z-50"
+      style={{ boxShadow: "0 -1px 0 0 hsl(var(--border)), 0 -6px 20px -4px rgba(0,0,0,0.06)" }}>
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -28,20 +29,35 @@ export default function BottomNav() {
               data-testid={`button-nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
               className="relative flex flex-col items-center justify-center gap-0.5 px-1.5 py-2 rounded-lg transition-colors min-w-0 flex-1"
             >
+              {/* Active pill indicator at top */}
               {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                <span
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full transition-all"
+                  style={{ width: 28, background: "hsl(var(--accent))" }}
+                />
               )}
-              <div className="relative">
+
+              {/* Icon wrapper with subtle active bg */}
+              <div
+                className="relative flex items-center justify-center w-8 h-7 rounded-lg transition-all"
+                style={isActive ? { background: "hsl(var(--primary) / 0.1)" } : {}}
+              >
                 <Icon
-                  className={`w-5 h-5 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                  className="w-5 h-5 transition-colors"
+                  style={{ color: isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
                 {(item as any).sparkly && !isActive && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-yellow-400 sparkle-pulse" />
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full sparkle-pulse"
+                    style={{ background: "hsl(var(--accent))" }}
+                  />
                 )}
               </div>
+
               <span
-                className={`text-[9px] font-medium transition-colors leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                className="text-[9px] font-semibold transition-colors leading-tight"
+                style={{ color: isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
               >
                 {item.label}
               </span>

@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { getBrandColor } from "@/lib/brandLogos";
 import BrandLogo from "@/components/BrandLogo";
+import { getCategoryImage } from "@/lib/categoryImages";
 import { useToast } from "@/hooks/use-toast";
 
 interface DealCardProps {
@@ -91,17 +92,15 @@ export default function DealCard({
     >
       {/* ── Brand banner ───────────────────────────────────────── */}
       <div className="relative h-24 overflow-hidden" style={{ background: brandBg }}>
-        {/* Large centered brand logo fills the banner */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <BrandLogo
-            storeName={storeName}
-            storeLogoUrl={storeLogoUrl}
-            fill
-            className="absolute inset-0"
-          />
-          {/* Dark gradient wash so text stays readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/10 to-black/40" />
-        </div>
+        <BrandLogo
+          storeName={storeName}
+          storeLogoUrl={storeLogoUrl}
+          categoryFallbackImage={getCategoryImage(category)}
+          fill
+          className="absolute inset-0"
+        />
+        {/* Gradient wash for discount text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30 pointer-events-none" />
 
         {/* Discount amount */}
         <div className="absolute top-2 right-3 z-10">
@@ -205,8 +204,8 @@ export default function DealCard({
             <button
               data-testid={`button-copy-code-${id}`}
               onClick={handleCopyCode}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-mono text-xs font-semibold hover-elevate active-elevate-2 flex-shrink-0 transition-colors"
-              style={{ borderColor: "hsl(var(--primary))", color: "hsl(var(--primary))" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-mono text-xs font-bold hover-elevate active-elevate-2 flex-shrink-0 transition-all text-white"
+              style={{ background: copied ? "hsl(164 60% 36%)" : "hsl(var(--accent))" }}
             >
               {copied ? (
                 <><Check className="w-3 h-3" /> Copied!</>
@@ -218,8 +217,8 @@ export default function DealCard({
           <Button
             data-testid={`button-view-deal-${id}`}
             onClick={onViewDeal}
-            className="flex-1"
-            style={{ background: "hsl(var(--primary))" }}
+            className="flex-1 rounded-full"
+            variant="default"
             size="sm"
           >
             View Deal
