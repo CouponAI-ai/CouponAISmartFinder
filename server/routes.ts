@@ -3,7 +3,7 @@ import { createServer } from "http";
 import OpenAI from "openai";
 import { storage } from "./storage";
 import { getAIRecommendations } from "./ai";
-import { calculateDistance, geocodeZipCode, isInZipCode, filterBusinessesByZipCode } from "./geocoding";
+import { calculateDistance, geocodeZipCode, filterBusinessesByZipCode } from "./geocoding";
 import { fetchNearbyBusinesses, mapBusinessTypeToCategory, type OverpassBusiness } from "./overpass";
 import { findCuratedCoupon, getRandomDeal, type CuratedCoupon } from "./curatedCoupons";
 import { getKnownLocationsForZip, matchesKnownLocation, type KnownLocation, KNOWN_LOCATIONS } from "./knownLocations";
@@ -102,14 +102,13 @@ export function registerRoutes(app: Express) {
         const zipGeodata = await geocodeZipCode(targetZipCode);
         const bbox = zipGeodata?.boundingBox;
 
-        const filteredBusinesses = await filterBusinessesByZipCode(
+        businesses = filterBusinessesByZipCode(
           businesses,
           targetZipCode,
           bbox,
+          zipGeodata?.latitude,
+          zipGeodata?.longitude,
         ) as OverpassBusiness[];
-
-        console.log(`Filtered to ${filteredBusinesses.length} businesses in ZIP ${targetZipCode}`);
-        businesses = filteredBusinesses;
       }
 
       const verifiedDeals: any[] = [];
@@ -207,13 +206,13 @@ export function registerRoutes(app: Express) {
         const zipGeodata = await geocodeZipCode(targetZipCode);
         const bbox = zipGeodata?.boundingBox;
 
-        const filteredBusinesses = await filterBusinessesByZipCode(
+        businesses = filterBusinessesByZipCode(
           businesses,
           targetZipCode,
           bbox,
+          zipGeodata?.latitude,
+          zipGeodata?.longitude,
         ) as OverpassBusiness[];
-
-        businesses = filteredBusinesses;
       }
 
       // Generate deals using RapidAPI first, then curated coupons
@@ -359,23 +358,29 @@ export function registerRoutes(app: Express) {
 
       // Fetch real businesses from Overpass API
       const radiusMeters = 10 * 1609.34; // 10 miles in meters
-      const businesses = await fetchNearbyBusinesses(userLat, userLon, radiusMeters);
+      let businesses = await fetchNearbyBusinesses(userLat, userLon, radiusMeters);
 
-      // Get known locations for this ZIP
+      // Get known locations for this ZIP (already filtered by ZIP via knownLocations DB)
       const knownLocations = targetZipCode ? getKnownLocationsForZip(targetZipCode) : [];
+
+      // Filter Overpass businesses to ZIP area using geometry only (no Nominatim calls)
+      if (targetZipCode) {
+        const zipGeodata = await geocodeZipCode(targetZipCode);
+        businesses = filterBusinessesByZipCode(
+          businesses,
+          targetZipCode,
+          zipGeodata?.boundingBox,
+          zipGeodata?.latitude,
+          zipGeodata?.longitude,
+        ) as OverpassBusiness[];
+      }
 
       // Generate deals from businesses (same logic as nearby endpoint)
       const deals: any[] = [];
       const processedLocations = new Set<string>();
 
-      // Add known locations first
+      // Add known locations first (already scoped to target ZIP)
       for (const location of knownLocations) {
-        // Check if in target ZIP
-        if (targetZipCode) {
-          const inZip = await isInZipCode(location.latitude, location.longitude, targetZipCode);
-          if (!inZip) continue;
-        }
-
         const deal = generateDealFromKnownLocation(location, userLat, userLon);
         if (deal) {
           deals.push(deal);
@@ -387,12 +392,6 @@ export function registerRoutes(app: Express) {
       for (const business of businesses) {
         // Skip if already processed from known locations
         if (matchesKnownLocation(business.name, knownLocations)) continue;
-
-        // Check if in target ZIP
-        if (targetZipCode) {
-          const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
-          if (!inZip) continue;
-        }
 
         const deal = await generateDealFromRealCoupons(business, userLat, userLon, rapidApiCoupons);
         // Only add if it's a verified deal
@@ -663,6 +662,7 @@ export function registerRoutes(app: Express) {
 
       // ── Guardrail 2: API key required ────────────────────────────────────
       const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
+      console.log(`[Chat] API key present: ${apiKey.length > 0}, length: ${apiKey.length}`);
       if (!apiKey) {
         return res.json({
           reply:
@@ -712,21 +712,30 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
       ];
 
       // ── Direct fetch to OpenRouter ──────────────────────────────────────
-      const orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://couponai.replit.app",
-          "X-Title": "CouponAI",
-        },
-        body: JSON.stringify({
-          model: "openrouter/free",
-          messages,
-          temperature: 0.7,
-          max_tokens: 800,
-        }),
-      });
+      const controller = new AbortController();
+      const chatTimeout = setTimeout(() => controller.abort(), 25000);
+
+      let orRes: Response;
+      try {
+        orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+            "HTTP-Referer": "https://couponai.replit.app",
+            "X-Title": "CouponAI",
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-3.2-3b-instruct:free",
+            messages,
+            temperature: 0.7,
+            max_tokens: 800,
+          }),
+        });
+      } finally {
+        clearTimeout(chatTimeout);
+      }
 
       if (!orRes.ok) {
         const errText = await orRes.text();

@@ -117,54 +117,131 @@ export async function reverseGeocodeToZip(
 }
 
 const geocodeCache = new Map<string, GeocodedLocation | null>();
+// Pending promise deduplicator — prevents duplicate in-flight calls for the same ZIP
+const geocodePending = new Map<string, Promise<GeocodedLocation | null>>();
+
+/**
+ * Build an approximate bounding box around a lat/lon point.
+ * Uses ±zipRadiusMiles as the half-extent on each axis.
+ */
+function buildApproxBoundingBox(
+  lat: number,
+  lon: number,
+  radiusMiles = 4,
+): [number, number, number, number] {
+  const latDelta = radiusMiles / 69.0;
+  const lonDelta = radiusMiles / (69.0 * Math.cos(toRadians(lat)));
+  return [lat - latDelta, lat + latDelta, lon - lonDelta, lon + lonDelta];
+}
+
+/**
+ * Fast ZIP geocoding via Zippopotam.us (no auth, no rate limits).
+ * Only covers US ZIP codes. Returns null for non-US or unknown ZIPs.
+ */
+async function geocodeViaZippopotam(zipCode: string): Promise<GeocodedLocation | null> {
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`https://api.zippopotam.us/us/${zipCode}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const data = await res.json() as any;
+    const place = data.places?.[0];
+    if (!place) return null;
+    const lat = parseFloat(place.latitude);
+    const lon = parseFloat(place.longitude);
+    const location: GeocodedLocation = {
+      latitude: lat,
+      longitude: lon,
+      displayName: `${place["place name"]}, ${place["state abbreviation"]} ${zipCode}`,
+      city: place["place name"],
+      state: place.state,
+      country: "United States",
+      // Approximate ±4-mile bounding box (typical US ZIP radius)
+      boundingBox: buildApproxBoundingBox(lat, lon, 4),
+    };
+    console.log(`Geocoded ZIP ${zipCode} via Zippopotam: (${lat}, ${lon})`);
+    return location;
+  } catch {
+    return null;
+  }
+}
 
 export async function geocodeZipCode(
   zipCode: string,
   countryCode = "us",
 ): Promise<GeocodedLocation | null> {
   const cacheKey = `${zipCode}-${countryCode}`;
+
+  // Return cached result immediately
   if (geocodeCache.has(cacheKey)) {
     return geocodeCache.get(cacheKey) || null;
   }
 
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&countrycodes=${countryCode}&format=json&addressdetails=1&limit=1`;
+  // Share in-flight requests for the same ZIP
+  if (geocodePending.has(cacheKey)) {
+    return geocodePending.get(cacheKey)!;
+  }
 
-    const response = await rateLimitedFetch(url);
+  const fetchPromise = (async (): Promise<GeocodedLocation | null> => {
+    try {
+      // Try Zippopotam first — fast, no rate limits
+      if (countryCode === "us") {
+        const fast = await geocodeViaZippopotam(zipCode);
+        if (fast) {
+          geocodeCache.set(cacheKey, fast);
+          return fast;
+        }
+      }
 
-    if (!response) {
-      return null;
-    }
+      // Fallback: Nominatim (slower, rate-limited)
+      const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zipCode)}&countrycodes=${countryCode}&format=json&addressdetails=1&limit=1`;
+      const response = await rateLimitedFetch(url);
 
-    const data = await response.json();
+      if (!response) {
+        geocodeCache.set(cacheKey, null);
+        return null;
+      }
 
-    if (!data || data.length === 0) {
-      console.log(`No results found for zip code: ${zipCode}`);
+      const data = await response.json();
+
+      if (!data || data.length === 0) {
+        console.log(`No results found for zip code: ${zipCode}`);
+        geocodeCache.set(cacheKey, null);
+        return null;
+      }
+
+      const result = data[0];
+      const lat = parseFloat(result.lat);
+      const lon = parseFloat(result.lon);
+
+      const location: GeocodedLocation = {
+        latitude: lat,
+        longitude: lon,
+        displayName: result.display_name,
+        city: result.address?.city || result.address?.town || result.address?.village,
+        state: result.address?.state,
+        country: result.address?.country,
+        boundingBox: result.boundingbox
+          ? result.boundingbox.map((v: string) => parseFloat(v))
+          : buildApproxBoundingBox(lat, lon, 4),
+      };
+
+      geocodeCache.set(cacheKey, location);
+      return location;
+    } catch (error) {
+      console.error("Geocoding error:", error);
       geocodeCache.set(cacheKey, null);
       return null;
+    } finally {
+      geocodePending.delete(cacheKey);
     }
+  })();
 
-    const result = data[0];
-
-    const location: GeocodedLocation = {
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
-      displayName: result.display_name,
-      city:
-        result.address?.city || result.address?.town || result.address?.village,
-      state: result.address?.state,
-      country: result.address?.country,
-      boundingBox: result.boundingbox
-        ? result.boundingbox.map((v: string) => parseFloat(v))
-        : undefined,
-    };
-
-    geocodeCache.set(cacheKey, location);
-    return location;
-  } catch (error) {
-    console.error("Geocoding error:", error);
-    return null;
-  }
+  geocodePending.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 export function isInBoundingBox(
@@ -206,26 +283,40 @@ export async function isInZipCode(
   return normalizedActual === normalizedTarget;
 }
 
-export async function filterBusinessesByZipCode(
+/**
+ * Filter businesses to those within the ZIP code area.
+ * Uses only bounding box + distance geometry — NO per-business Nominatim calls.
+ * This avoids Nominatim rate-limiting which caused 90-second response times.
+ */
+export function filterBusinessesByZipCode(
   businesses: Array<{ latitude: number; longitude: number; [key: string]: any }>,
   targetZipCode: string,
   boundingBox?: [number, number, number, number],
-): Promise<Array<{ latitude: number; longitude: number; [key: string]: any }>> {
-  let candidates = businesses;
-  
+  centerLat?: number,
+  centerLon?: number,
+): Array<{ latitude: number; longitude: number; [key: string]: any }> {
   if (boundingBox) {
-    candidates = businesses.filter(b => isInBoundingBox(b.latitude, b.longitude, boundingBox, 1.0));
-    console.log(`Bounding box pre-filter: ${businesses.length} -> ${candidates.length} candidates`);
+    // Expand the bounding box by 1 mile so edge businesses aren't excluded
+    const filtered = businesses.filter(b =>
+      isInBoundingBox(b.latitude, b.longitude, boundingBox, 1.5)
+    );
+    console.log(`Bounding box filter: ${businesses.length} -> ${filtered.length} businesses in ZIP ${targetZipCode}`);
+    return filtered;
   }
 
-  const filtered: typeof candidates = [];
-
-  for (const business of candidates) {
-    const inZip = await isInZipCode(business.latitude, business.longitude, targetZipCode);
-    if (inZip) {
-      filtered.push(business);
-    }
+  if (centerLat !== undefined && centerLon !== undefined) {
+    // Fall back to a 12-mile radius from ZIP center
+    const filtered = businesses.filter(b => {
+      const dist = calculateDistance(
+        { latitude: centerLat, longitude: centerLon },
+        { latitude: b.latitude, longitude: b.longitude },
+      );
+      return dist <= 12;
+    });
+    console.log(`Radius filter: ${businesses.length} -> ${filtered.length} businesses near ZIP ${targetZipCode}`);
+    return filtered;
   }
 
-  return filtered;
+  // No geometry info — return all (let the caller's existing distance filter handle it)
+  return businesses;
 }
