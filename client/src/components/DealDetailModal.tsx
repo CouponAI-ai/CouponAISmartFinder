@@ -10,8 +10,9 @@ import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Smartphone, MapPin } f
 import { formatDistance } from "date-fns";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getCategoryImage } from "@/lib/categoryImages";
 import { getStoreUrl } from "@/lib/storeUrls";
+import BrandLogo from "@/components/BrandLogo";
+import { getBrandColor } from "@/lib/brandLogos";
 import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
@@ -48,8 +49,8 @@ export default function DealDetailModal({
     }
   };
 
-  const bannerImage = getCategoryImage(deal.category);
   const storeUrl = getStoreUrl(deal.storeName);
+  const brandBg = getBrandColor(deal.storeName);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,37 +62,31 @@ export default function DealDetailModal({
           <DialogTitle className="sr-only">Deal Details</DialogTitle>
         </DialogHeader>
 
-        {/* Hero banner */}
-        <div className="relative h-32 overflow-hidden rounded-t-lg">
-          <img src={bannerImage} alt={deal.category} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/60" />
+        {/* Hero banner — brand logo fills the header */}
+        <div className="relative h-36 overflow-hidden rounded-t-lg" style={{ background: brandBg }}>
+          {/* Brand logo centered in header */}
+          <BrandLogo
+            storeName={deal.storeName}
+            storeLogoUrl={deal.storeLogoUrl ?? undefined}
+            fill
+            className="absolute inset-0"
+          />
+          {/* Dark wash for readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/60" />
 
-          {/* Discount overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-            <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">
+          {/* Discount + store name overlay */}
+          <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-white/80 mb-0.5">
               {deal.storeName}
             </p>
-            <p className="text-5xl font-extrabold font-display drop-shadow-lg">
+            <p className="text-5xl font-extrabold font-display text-white drop-shadow-lg">
               {deal.discountAmount}
             </p>
           </div>
-
-          {/* Store logo */}
-          {deal.storeLogoUrl && (
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-              <div className="w-14 h-14 rounded-full bg-card border-4 border-card shadow-lg flex items-center justify-center overflow-hidden">
-                <img
-                  src={deal.storeLogoUrl}
-                  alt={deal.storeName}
-                  className="w-10 h-10 object-contain"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Content */}
-        <div className={`px-6 pb-6 ${deal.storeLogoUrl ? 'pt-10' : 'pt-6'}`}>
+        <div className="px-6 pb-6 pt-5">
           {/* Title */}
           <h3 className="text-xl font-bold text-center mb-1">{deal.title}</h3>
 

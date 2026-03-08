@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
   Search, Sparkles, Loader2, MapPin, Star, BadgeCheck,
-  Smartphone, AlertCircle, UtensilsCrossed, Tag, Car, Film,
-  ShoppingBag, Activity, ShoppingCart, Shirt, Cpu, Plane, Scissors,
-  Dumbbell, Store, ChevronRight, Zap, Coffee, TrendingUp
+  AlertCircle, UtensilsCrossed, Tag, Car, Film,
+  ShoppingBag, Activity, ShoppingCart, Shirt, Cpu, Store, ChevronRight, Zap, Coffee, TrendingUp
 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
+import { getBrandColor } from "@/lib/brandLogos";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,18 +129,15 @@ function CompactDealCard({ deal, isSaved, onSave, onClick }: CompactDealCardProp
       onClick={onClick}
       className="flex-shrink-0 w-52 rounded-2xl overflow-hidden cursor-pointer bg-card border border-border shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
     >
-      {/* Image header */}
-      <div className="relative h-28 overflow-hidden">
-        {deal.storeLogoUrl ? (
-          <img src={deal.storeLogoUrl} alt={deal.storeName} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, hsl(142 71% 20%), hsl(142 60% 32%))" }}>
-            <Tag className="w-10 h-10 text-white/40" />
-          </div>
-        )}
-        {/* Gradient wash */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      {/* Brand image header */}
+      <div className="relative h-28 overflow-hidden" style={{ background: getBrandColor(deal.storeName) }}>
+        <BrandLogo
+          storeName={deal.storeName}
+          storeLogoUrl={deal.storeLogoUrl ?? undefined}
+          fill
+          className="absolute inset-0"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
 
         {/* Discount badge */}
         <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-extrabold"
