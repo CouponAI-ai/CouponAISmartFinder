@@ -1,12 +1,12 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import * as schema from "@shared/schema";
 
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 if (process.env.DATABASE_URL) {
-  const sql = neon(process.env.DATABASE_URL);
-  db = drizzle(sql, { schema });
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  db = drizzle(pool, { schema });
 } else {
   console.warn("DATABASE_URL not set — view tracking will use in-memory fallback.");
 }
