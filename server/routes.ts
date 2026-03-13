@@ -533,6 +533,28 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/coupons/:id/view", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const viewCount = await storage.trackView(id);
+      res.json({ viewCount });
+    } catch (error) {
+      console.error("Track view error:", error);
+      res.status(500).json({ error: "Failed to track view" });
+    }
+  });
+
+  app.get("/api/coupons/:id/views", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const viewCount = await storage.getViewCount(id);
+      res.json({ viewCount });
+    } catch (error) {
+      console.error("Get view count error:", error);
+      res.status(500).json({ error: "Failed to get view count" });
+    }
+  });
+
   // Get saved coupons
   app.get("/api/saved-coupons", async (_req, res) => {
     try {

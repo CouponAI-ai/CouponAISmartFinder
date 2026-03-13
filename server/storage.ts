@@ -1,5 +1,8 @@
 import type { Coupon, SavedCoupon, SavedDeal, UserPreferences } from "@shared/schema";
+import { couponViews } from "@shared/schema";
 import { nanoid } from "nanoid";
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
 
 // In-memory storage interface
 export interface IStorage {
@@ -25,6 +28,10 @@ export interface IStorage {
   // User preferences
   getUserPreferences(): Promise<UserPreferences | undefined>;
   updateUserPreferences(categories: string[]): Promise<UserPreferences>;
+
+  // View tracking (persisted in database)
+  trackView(couponId: string): Promise<number>;
+  getViewCount(couponId: string): Promise<number>;
 }
 
 // In-memory storage implementation
@@ -42,7 +49,7 @@ export class MemStorage implements IStorage {
     // Sample coupon data
     const sampleCoupons: Coupon[] = [
       {
-        id: nanoid(),
+        id: "seed-whole-foods",
         storeName: "Whole Foods",
         storeLogoUrl: "https://logo.clearbit.com/wholefoodsmarket.com",
         discountAmount: "$20 OFF",
@@ -59,7 +66,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4194,
       },
       {
-        id: nanoid(),
+        id: "seed-nike",
         storeName: "Nike",
         storeLogoUrl: "https://logo.clearbit.com/nike.com",
         discountAmount: "30% OFF",
@@ -76,7 +83,7 @@ export class MemStorage implements IStorage {
         longitude: -122.0839,
       },
       {
-        id: nanoid(),
+        id: "seed-best-buy",
         storeName: "Best Buy",
         storeLogoUrl: "https://logo.clearbit.com/bestbuy.com",
         discountAmount: "$100 OFF",
@@ -93,7 +100,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4094,
       },
       {
-        id: nanoid(),
+        id: "seed-uber-eats",
         storeName: "Uber Eats",
         storeLogoUrl: "https://logo.clearbit.com/uber.com",
         discountAmount: "50% OFF",
@@ -110,7 +117,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4294,
       },
       {
-        id: nanoid(),
+        id: "seed-airbnb",
         storeName: "Airbnb",
         storeLogoUrl: "https://logo.clearbit.com/airbnb.com",
         discountAmount: "$50 OFF",
@@ -127,7 +134,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4394,
       },
       {
-        id: nanoid(),
+        id: "seed-cvs-pharmacy",
         storeName: "CVS Pharmacy",
         storeLogoUrl: "https://logo.clearbit.com/cvs.com",
         discountAmount: "20% OFF",
@@ -144,7 +151,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4094,
       },
       {
-        id: nanoid(),
+        id: "seed-sephora",
         storeName: "Sephora",
         storeLogoUrl: "https://logo.clearbit.com/sephora.com",
         discountAmount: "15% OFF",
@@ -161,7 +168,7 @@ export class MemStorage implements IStorage {
         longitude: -122.3994,
       },
       {
-        id: nanoid(),
+        id: "seed-planet-fitness",
         storeName: "Planet Fitness",
         storeLogoUrl: "https://logo.clearbit.com/planetfitness.com",
         discountAmount: "$10/month",
@@ -178,7 +185,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4494,
       },
       {
-        id: nanoid(),
+        id: "seed-target",
         storeName: "Target",
         storeLogoUrl: "https://logo.clearbit.com/target.com",
         discountAmount: "25% OFF",
@@ -195,7 +202,7 @@ export class MemStorage implements IStorage {
         longitude: -122.4594,
       },
       {
-        id: nanoid(),
+        id: "seed-amazon",
         storeName: "Amazon",
         storeLogoUrl: "https://logo.clearbit.com/amazon.com",
         discountAmount: "$15 OFF",
@@ -330,6 +337,39 @@ export class MemStorage implements IStorage {
     return Array.from(this.savedDeals.values()).some(
       (d) => d.couponId === couponId
     );
+  }
+
+  private viewCounts: Map<string, number> = new Map();
+
+  async trackView(couponId: string): Promise<number> {
+    if (db) {
+      await db
+        .insert(couponViews)
+        .values({ couponId, viewCount: 1 })
+        .onConflictDoUpdate({
+          target: couponViews.couponId,
+          set: { viewCount: sql`${couponViews.viewCount} + 1` },
+        });
+      return this.getViewCount(couponId);
+    }
+    const current = (this.viewCounts.get(couponId) || 0) + 1;
+    this.viewCounts.set(couponId, current);
+    return current;
+  }
+
+  async getViewCount(couponId: string): Promise<number> {
+    if (db) {
+      try {
+        const result = await db
+          .select({ viewCount: couponViews.viewCount })
+          .from(couponViews)
+          .where(eq(couponViews.couponId, couponId));
+        return result.length > 0 ? result[0].viewCount : 0;
+      } catch {
+        return 0;
+      }
+    }
+    return this.viewCounts.get(couponId) || 0;
   }
 }
 

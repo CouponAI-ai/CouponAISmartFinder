@@ -6,14 +6,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Smartphone, MapPin } from "lucide-react";
+import { Copy, ExternalLink, Calendar, Check, BadgeCheck, Smartphone, MapPin, Eye } from "lucide-react";
 import { formatDistance } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getStoreUrl } from "@/lib/storeUrls";
 import BrandLogo from "@/components/BrandLogo";
 import { getBrandColor } from "@/lib/brandLogos";
 import { getCategoryImage } from "@/lib/categoryImages";
+import { apiRequest } from "@/lib/queryClient";
 import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
@@ -28,7 +29,23 @@ export default function DealDetailModal({
   deal,
 }: DealDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [viewCount, setViewCount] = useState<number | null>(null);
+  const trackedRef = useRef<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open && deal.id && trackedRef.current !== deal.id) {
+      trackedRef.current = deal.id;
+      apiRequest("POST", `/api/coupons/${deal.id}/view`)
+        .then((res) => res.json())
+        .then((data) => setViewCount(data.viewCount))
+        .catch((err) => console.warn("View tracking failed:", err));
+    }
+    if (!open) {
+      trackedRef.current = null;
+      setViewCount(null);
+    }
+  }, [open, deal.id]);
 
   const expirationText = deal.expirationDate
     ? formatDistance(
@@ -205,10 +222,11 @@ export default function DealDetailModal({
             </div>
           )}
 
-          {/* Claim count */}
-          {deal.claimCount && deal.claimCount > 0 && (
-            <div className="text-center text-sm text-muted-foreground mt-4">
-              {deal.claimCount.toLocaleString()} people claimed this deal
+          {/* Interest count */}
+          {viewCount !== null && viewCount > 0 && (
+            <div className="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground mt-4" data-testid="text-interest-count">
+              <Eye className="w-4 h-4" />
+              {viewCount.toLocaleString()} {viewCount === 1 ? "person is" : "people are"} interested in this deal
             </div>
           )}
         </div>

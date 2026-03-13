@@ -82,3 +82,10 @@ export const insertUserPreferencesSchema = createInsertSchema(userPreferences).o
 
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
+
+export const couponViews = pgTable("coupon_views", {
+  couponId: varchar("coupon_id").primaryKey(),
+  viewCount: integer("view_count").notNull().default(0),
+});
+
+export type CouponView = typeof couponViews.$inferSelect;
