@@ -3,6 +3,7 @@ import type { Coupon } from "@shared/schema";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const FREE_MODEL = "meta-llama/llama-3.2-3b-instruct:free";
+const PAID_MODEL = "meta-llama/llama-3.2-3b-instruct";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
@@ -14,6 +15,37 @@ const openai = process.env.OPENAI_API_KEY
       },
     })
   : null;
+
+function isRateLimitError(err: unknown): boolean {
+  return (
+    err instanceof OpenAI.APIError && err.status === 429
+  );
+}
+
+async function createCompletionWithFallback(
+  client: OpenAI,
+  params: Omit<OpenAI.ChatCompletionCreateParamsNonStreaming, "model">,
+  label: string
+): Promise<OpenAI.ChatCompletion> {
+  try {
+    const result = await client.chat.completions.create({ ...params, model: FREE_MODEL });
+    console.log(`[${label}] Used model: ${FREE_MODEL}`);
+    return result;
+  } catch (err: unknown) {
+    if (isRateLimitError(err)) {
+      console.log(`[${label}] Free model rate limited (429), falling back to paid model: ${PAID_MODEL}`);
+      try {
+        const result = await client.chat.completions.create({ ...params, model: PAID_MODEL });
+        console.log(`[${label}] Used model: ${PAID_MODEL}`);
+        return result;
+      } catch (paidErr: unknown) {
+        console.error(`[${label}] Paid model (${PAID_MODEL}) also failed:`, paidErr instanceof Error ? paidErr.message : paidErr);
+        throw paidErr;
+      }
+    }
+    throw err;
+  }
+}
 
 interface AIRecommendation {
   deal: any;
@@ -69,12 +101,15 @@ Return a JSON array with exactly this format:
 
 Return ONLY the JSON array, no other text.`;
 
-    const response = await openai.chat.completions.create({
-      model: FREE_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 500,
-    });
+    const response = await createCompletionWithFallback(
+      openai,
+      {
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 500,
+      },
+      "AI Recommendations"
+    );
 
     const content = response.choices[0]?.message?.content?.trim();
     if (!content) {

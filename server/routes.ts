@@ -711,31 +711,45 @@ Personality: Warm, enthusiastic about savings, concise, and helpful. Use phrases
         { role: "user", content: message.slice(0, 500) },
       ];
 
-      // ── Direct fetch to OpenRouter ──────────────────────────────────────
-      const controller = new AbortController();
-      const chatTimeout = setTimeout(() => controller.abort(), 25000);
+      // ── Direct fetch to OpenRouter (free model first, paid fallback) ───
+      const FREE_MODEL = "meta-llama/llama-3.2-3b-instruct:free";
+      const PAID_MODEL = "meta-llama/llama-3.2-3b-instruct";
 
-      let orRes: Response;
-      try {
-        orRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-            "HTTP-Referer": "https://couponai.replit.app",
-            "X-Title": "CouponAI",
-          },
-          body: JSON.stringify({
-            model: "meta-llama/llama-3.2-3b-instruct:free",
-            messages,
-            temperature: 0.7,
-            max_tokens: 800,
-          }),
-        });
-      } finally {
-        clearTimeout(chatTimeout);
+      const fetchOpenRouter = async (model: string): Promise<Response> => {
+        const controller = new AbortController();
+        const chatTimeout = setTimeout(() => controller.abort(), 25000);
+        try {
+          return await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+              "HTTP-Referer": "https://couponai.replit.app",
+              "X-Title": "CouponAI",
+            },
+            body: JSON.stringify({
+              model,
+              messages,
+              temperature: 0.7,
+              max_tokens: 800,
+            }),
+          });
+        } finally {
+          clearTimeout(chatTimeout);
+        }
+      };
+
+      let orRes = await fetchOpenRouter(FREE_MODEL);
+      let usedModel = FREE_MODEL;
+
+      if (orRes.status === 429) {
+        console.log(`[Chat] Free model rate limited (429), falling back to paid model: ${PAID_MODEL}`);
+        orRes = await fetchOpenRouter(PAID_MODEL);
+        usedModel = PAID_MODEL;
       }
+
+      console.log(`[Chat] Used model: ${usedModel}`);
 
       if (!orRes.ok) {
         const errText = await orRes.text();
