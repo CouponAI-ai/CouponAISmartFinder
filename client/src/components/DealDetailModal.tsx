@@ -14,7 +14,6 @@ import { getStoreUrl } from "@/lib/storeUrls";
 import BrandLogo from "@/components/BrandLogo";
 import { getBrandColor } from "@/lib/brandLogos";
 import { getCategoryImage } from "@/lib/categoryImages";
-import { apiRequest } from "@/lib/queryClient";
 import type { Coupon } from "@shared/schema";
 
 interface DealDetailModalProps {
@@ -33,17 +32,51 @@ export default function DealDetailModal({
   const trackedRef = useRef<string | null>(null);
   const { toast } = useToast();
 
+  const [viewCountLoading, setViewCountLoading] = useState(false);
+
   useEffect(() => {
     if (open && deal.id && trackedRef.current !== deal.id) {
       trackedRef.current = deal.id;
-      apiRequest("POST", `/api/coupons/${deal.id}/view`)
-        .then((res) => res.json())
-        .then((data) => setViewCount(data.viewCount))
-        .catch((err) => console.warn("View tracking failed:", err));
+      setViewCountLoading(true);
+
+      const fetchViewCount = async () => {
+        try {
+          const postRes = await fetch(`/api/coupons/${deal.id}/view`, {
+            method: "POST",
+            credentials: "include",
+          });
+          if (postRes.ok) {
+            const data = await postRes.json();
+            if (data && typeof data.viewCount === "number") {
+              setViewCount(data.viewCount);
+              setViewCountLoading(false);
+              return;
+            }
+          }
+        } catch {
+        }
+
+        try {
+          const getRes = await fetch(`/api/coupons/${deal.id}/views`, {
+            credentials: "include",
+          });
+          if (getRes.ok) {
+            const data = await getRes.json();
+            if (data && typeof data.viewCount === "number") {
+              setViewCount(data.viewCount);
+            }
+          }
+        } catch {
+        }
+        setViewCountLoading(false);
+      };
+
+      fetchViewCount();
     }
     if (!open) {
       trackedRef.current = null;
       setViewCount(null);
+      setViewCountLoading(false);
     }
   }, [open, deal.id]);
 
@@ -223,7 +256,13 @@ export default function DealDetailModal({
           )}
 
           {/* Interest count */}
-          {viewCount !== null && viewCount > 0 && (
+          {viewCountLoading && (
+            <div className="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground mt-4" data-testid="text-interest-loading">
+              <Eye className="w-4 h-4 animate-pulse" />
+              <span className="animate-pulse">Loading interest...</span>
+            </div>
+          )}
+          {!viewCountLoading && viewCount !== null && viewCount > 0 && (
             <div className="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground mt-4" data-testid="text-interest-count">
               <Eye className="w-4 h-4" />
               {viewCount.toLocaleString()} {viewCount === 1 ? "person is" : "people are"} interested in this deal
