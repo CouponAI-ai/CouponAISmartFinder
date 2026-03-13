@@ -61,6 +61,16 @@ The app uses a dual-source approach for coupon data:
 
 Coupons are matched to nearby stores discovered via OpenStreetMap/Overpass API.
 
+## Required Secrets (Critical)
+
+The following secret **must** be present in Replit's Secrets tab (🔒) at all times. If deleted, the affected features break silently — the server will log a clear warning at startup so you know immediately.
+
+| Secret | Used for | Where to get it |
+|--------|----------|-----------------|
+| `OPENAI_API_KEY` | AI Chatbot + AI Picks (via OpenRouter) | [openrouter.ai/keys](https://openrouter.ai/keys) — free account |
+
+The server checks for this key at startup and prints a warning to the console if it is missing.
+
 ## External Dependencies
 
 ### Third-Party Services

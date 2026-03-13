@@ -662,7 +662,6 @@ export function registerRoutes(app: Express) {
 
       // ── Guardrail 2: API key required ────────────────────────────────────
       const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
-      console.log(`[Chat] API key present: ${apiKey.length > 0}, length: ${apiKey.length}`);
       if (!apiKey) {
         return res.json({
           reply:

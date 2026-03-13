@@ -46,6 +46,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Required secrets check ─────────────────────────────────────────────────
+// Logs a loud warning at startup if any critical API key is missing.
+// This makes it immediately obvious in the workflow console when a secret
+// has been accidentally deleted.
+const REQUIRED_SECRETS: { key: string; feature: string }[] = [
+  { key: "OPENAI_API_KEY", feature: "AI Chatbot & AI Picks (OpenRouter)" },
+];
+
+for (const { key, feature } of REQUIRED_SECRETS) {
+  if (!(process.env[key] ?? "").trim()) {
+    console.warn(
+      `\n⚠️  WARNING: Missing required secret "${key}" — ${feature} will be unavailable.\n` +
+      `   Add it via the Replit Secrets tab (🔒) or your deployment environment.\n`
+    );
+  }
+}
+
 (async () => {
   const server = await registerRoutes(app);
 
