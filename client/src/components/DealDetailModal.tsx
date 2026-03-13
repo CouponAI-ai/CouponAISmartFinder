@@ -176,7 +176,7 @@ export default function DealDetailModal({
           )}
 
           {/* Category and expiration */}
-          <div className="flex items-center justify-center gap-4 mb-5 flex-wrap">
+          <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
             <Badge variant="secondary">{deal.category}</Badge>
             {expirationText && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -185,6 +185,20 @@ export default function DealDetailModal({
               </div>
             )}
           </div>
+
+          {/* Interest count — shown near the top so users always see it */}
+          {viewCountLoading && (
+            <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground mb-4 py-2 rounded-lg bg-muted/50" data-testid="text-interest-loading">
+              <Eye className="w-4 h-4 animate-pulse" />
+              <span className="animate-pulse">Loading interest...</span>
+            </div>
+          )}
+          {!viewCountLoading && viewCount !== null && viewCount > 0 && (
+            <div className="flex items-center justify-center gap-1.5 text-sm font-medium text-primary mb-4 py-2 rounded-lg bg-primary/10" data-testid="text-interest-count">
+              <Eye className="w-4 h-4" />
+              {viewCount.toLocaleString()} {viewCount === 1 ? "person is" : "people are"} interested in this deal
+            </div>
+          )}
 
           {/* Coupon code */}
           {deal.code && (
@@ -255,19 +269,6 @@ export default function DealDetailModal({
             </div>
           )}
 
-          {/* Interest count */}
-          {viewCountLoading && (
-            <div className="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground mt-4" data-testid="text-interest-loading">
-              <Eye className="w-4 h-4 animate-pulse" />
-              <span className="animate-pulse">Loading interest...</span>
-            </div>
-          )}
-          {!viewCountLoading && viewCount !== null && viewCount > 0 && (
-            <div className="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground mt-4" data-testid="text-interest-count">
-              <Eye className="w-4 h-4" />
-              {viewCount.toLocaleString()} {viewCount === 1 ? "person is" : "people are"} interested in this deal
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
