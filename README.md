@@ -34,17 +34,6 @@ CouponAI Smart Finder is an AI-powered platform that helps users discover **veri
 ```
 ZIP Code → Geocode (Nominatim) → Fetch Businesses (Overpass) → Rank (Haversine + AI) → Display Deals
 ```
-
----
-
-## 🖼️ Demo / Preview
-
-*Add your screenshots to a `/screenshots` folder in your repo, then they will display automatically.*
-
-![Map View](screenshots/map.png)
-![Deal Cards](screenshots/deals.png)
-![Search Results](screenshots/search.png)
-
 ---
 
 ## 🛠️ Tech Stack
@@ -113,8 +102,6 @@ npm start
 * **Cameron Hartefields** — Geolocation & Location Services
 * **Brodie** — Documentation & Chatbot
 
-This private project is supervised by Dr. Ahmad Al-Shami, who has repository access solely for academic guidance, review, and assessment purposes.
-
 ---
 
 ## 📌 Problem & Motivation
@@ -146,4 +133,5 @@ https://couponai.io
 
 ## ⭐ Notes
 
-This project was developed as a **senior capstone**, focusing on AI-driven automation, geolocation systems, and real-world usability.
+This private project is supervised by [Dr. Ahmad Al-Shami](https://github.com/alshami10), who has repository access solely for academic guidance, review, and assessment purposes.
+
